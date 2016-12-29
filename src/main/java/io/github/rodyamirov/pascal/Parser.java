@@ -1,6 +1,7 @@
 package io.github.rodyamirov.pascal;
 
 import com.google.common.collect.ImmutableSet;
+import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -10,6 +11,7 @@ import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
+import io.github.rodyamirov.pascal.tree.OrElseNode;
 import io.github.rodyamirov.pascal.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.pascal.tree.ProgramNode;
 import io.github.rodyamirov.pascal.tree.RealConstantNode;
@@ -225,6 +227,30 @@ public class Parser {
         return new NoOpNode();
     }
 
+    private ExpressionNode expression() {
+        // expr -> comp ([and then | or else] comp)*
+        ExpressionNode out = compareExpression();
+
+        // sadly the functional style doesn't work well here
+        // still doing left-associativity
+        boolean hasMore = true;
+        while (hasMore) {
+            // if we see an AND, it didn't grab at a lower level, which means
+            // it must be an AND-THEN (and likewise with OR-ELSE)
+            if (eatNonstrict(Token.Type.AND).isPresent()) {
+                eatStrict(Token.Type.THEN);
+                out = new AndThenNode(out, compareExpression());
+            } else if (eatNonstrict(Token.Type.OR).isPresent()) {
+                eatStrict(Token.Type.ELSE);
+                out = new OrElseNode(out, compareExpression());
+            } else {
+                hasMore = false;
+            }
+        }
+
+        return out;
+    }
+
     private static final ImmutableSet<Token.Type> compareTypes = ImmutableSet.<Token.Type>builder()
             .add(Token.Type.EQUALS).add(Token.Type.NOT_EQUALS).add(Token.Type.LESS_THAN)
             .add(Token.Type.LESS_THAN_OR_EQUALS).add(Token.Type.GREATER_THAN)
@@ -235,7 +261,7 @@ public class Parser {
      * the first one you go to, to get an "expression")
      * @return
      */
-    private ExpressionNode expression() {
+    private ExpressionNode compareExpression() {
         ExpressionNode out = additiveExpression();
 
         // this formulation gets left associativity correct; obvious recursion does not
@@ -249,7 +275,7 @@ public class Parser {
     }
 
     private static final ImmutableSet<Token.Type> expressionTypes = ImmutableSet.<Token.Type>builder()
-            .add(Token.Type.PLUS).add(Token.Type.MINUS).add(Token.Type.OR).build();
+            .add(Token.Type.PLUS).add(Token.Type.MINUS).build();
 
     private ExpressionNode additiveExpression() {
         // additiveExpression -> factor ([+-] factor)*
@@ -258,10 +284,18 @@ public class Parser {
         ExpressionNode out = factor();
 
         // this formulation gets left associativity correct; obvious recursion does not
-        Optional<Token> maybeOpToken;
-        while ((maybeOpToken = eatNonstrict(expressionTypes::contains)).isPresent()) {
-            Token opToken = maybeOpToken.get();
-            out = new BinOpNode(out, factor(), opToken);
+        boolean keepGoing = true;
+        while (keepGoing) {
+            Optional<Token> maybeOpToken;
+            if ((maybeOpToken = eatNonstrict(expressionTypes::contains)).isPresent()) {
+                Token opToken = maybeOpToken.get();
+                out = new BinOpNode(out, factor(), opToken);
+            } else if (currentToken.equals(Token.OR) && ! tokenizer.peek().equals(Token.ELSE)) {
+                eatStrict(Token.Type.OR);
+                out = new BinOpNode(out, factor(), Token.OR);
+            } else {
+                keepGoing = false;
+            }
         }
 
         return out;
@@ -269,7 +303,7 @@ public class Parser {
 
     private static final ImmutableSet<Token.Type> factorTypes = ImmutableSet.<Token.Type>builder()
             .add(Token.Type.TIMES).add(Token.Type.REAL_DIVIDE).add(Token.Type.INT_DIVIDE)
-            .add(Token.Type.MOD).add(Token.Type.AND).build();
+            .add(Token.Type.MOD).build();
 
     private ExpressionNode factor() {
         // factor -> terminal ([*/ AND] terminal)*
@@ -278,10 +312,18 @@ public class Parser {
         ExpressionNode out = unop();
 
         // this formulation gets left associativity correct; obvious recursion does not
-        Optional<Token> maybeOpToken;
-        while ((maybeOpToken = eatNonstrict(factorTypes::contains)).isPresent()) {
-            Token opToken = maybeOpToken.get();
-            out = new BinOpNode(out, unop(), opToken);
+        boolean keepGoing = true;
+        while (keepGoing) {
+            Optional<Token> maybeOpToken;
+            if ((maybeOpToken = eatNonstrict(factorTypes::contains)).isPresent()) {
+                Token opToken = maybeOpToken.get();
+                out = new BinOpNode(out, unop(), opToken);
+            } else if (currentToken.equals(Token.AND) && ! tokenizer.peek().equals(Token.THEN)) {
+                eatStrict(Token.Type.AND);
+                out = new BinOpNode(out, unop(), Token.AND);
+            } else {
+                keepGoing = false;
+            }
         }
 
         return out;

@@ -2,6 +2,7 @@ package io.github.rodyamirov.pascal.visitor;
 
 import io.github.rodyamirov.pascal.SymbolTable;
 import io.github.rodyamirov.pascal.Token;
+import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -10,6 +11,7 @@ import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
+import io.github.rodyamirov.pascal.tree.OrElseNode;
 import io.github.rodyamirov.pascal.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.pascal.tree.ProgramNode;
 import io.github.rodyamirov.pascal.tree.RealConstantNode;
@@ -85,6 +87,18 @@ public class SymbolTableBuilder extends NodeVisitor {
         for (StatementNode statementNode : compoundNode.statements) {
             statementNode.acceptVisit(this);
         }
+    }
+
+    @Override
+    public void visit(AndThenNode andThenNode) {
+        andThenNode.left.acceptVisit(this);
+        andThenNode.right.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(OrElseNode orElseNode) {
+        orElseNode.left.acceptVisit(this);
+        orElseNode.right.acceptVisit(this);
     }
 
     @Override

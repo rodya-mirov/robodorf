@@ -1,6 +1,7 @@
 package io.github.rodyamirov.pascal;
 
 import com.google.common.collect.ImmutableList;
+import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -10,6 +11,7 @@ import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
+import io.github.rodyamirov.pascal.tree.OrElseNode;
 import io.github.rodyamirov.pascal.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.pascal.tree.ProgramNode;
 import io.github.rodyamirov.pascal.tree.RealConstantNode;
@@ -197,6 +199,42 @@ public class ParserTest {
                 "true + false",
                 "true+false",
                 "(true+(false))"
+        };
+
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void shortCircuitTest1() {
+        SyntaxTree tree = new AndThenNode(
+                BooleanConstantNode.make(true),
+                BooleanConstantNode.make(false)
+        );
+
+        String[] text = new String[] {
+                "true and Then false",
+                "(true) And then (false)",
+                "true and thEN (false)",
+                "(true) AND tHen false",
+                "(true and then false)"
+        };
+
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void shortCircuitTest2() {
+        SyntaxTree tree = new OrElseNode(
+                BooleanConstantNode.make(true),
+                BooleanConstantNode.make(false)
+        );
+
+        String[] text = new String[] {
+                "true or else false",
+                "(true) or else (false)",
+                "true OR ELSE (false)",
+                "(true) Or Else false",
+                "(true oR eLsE false)"
         };
 
         doParseExpressionTest(text, tree);

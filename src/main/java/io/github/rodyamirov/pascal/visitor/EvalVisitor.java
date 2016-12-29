@@ -4,6 +4,7 @@ import io.github.rodyamirov.pascal.SymbolTable;
 import io.github.rodyamirov.pascal.SymbolValue;
 import io.github.rodyamirov.pascal.SymbolValueTable;
 import io.github.rodyamirov.pascal.Token;
+import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -13,6 +14,7 @@ import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
+import io.github.rodyamirov.pascal.tree.OrElseNode;
 import io.github.rodyamirov.pascal.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.pascal.tree.ProgramNode;
 import io.github.rodyamirov.pascal.tree.RealConstantNode;
@@ -60,6 +62,16 @@ public class EvalVisitor extends NodeVisitor {
     public void visit(ProgramNode programNode) {
         // TODO: use the programNode.name to make scopes
         programNode.blockNode.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(AndThenNode andThenNode) {
+        throw TODOException.make();
+    }
+
+    @Override
+    public void visit(OrElseNode orElseNode) {
+        throw TODOException.make();
     }
 
     @Override
