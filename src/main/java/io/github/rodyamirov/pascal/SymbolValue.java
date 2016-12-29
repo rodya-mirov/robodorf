@@ -118,8 +118,19 @@ public class SymbolValue<T> {
      * @return A float representing the symbol value
      * @throws TypeCheckException if <code>a</code> cannot be converted to an INTEGER
      */
-    private static int toInt(SymbolValue a) {
+    private static int toInteger(SymbolValue a) {
         SymbolValue<Integer> converted = convert(a, TypeSpec.INTEGER);
+        return converted.value;
+    }
+
+    /**
+     * Converts the SymbolValue to INTEGER then returns its value as an int.
+     * @param a The SymbolValue to be converted
+     * @return A float representing the symbol value
+     * @throws TypeCheckException if <code>a</code> cannot be converted to an INTEGER
+     */
+    private static boolean toBoolean(SymbolValue a) {
+        SymbolValue<Boolean> converted = convert(a, TypeSpec.BOOLEAN);
         return converted.value;
     }
 
@@ -128,7 +139,7 @@ public class SymbolValue<T> {
 
         switch (out) {
             case INTEGER:
-                return new SymbolValue<>(out, toInt(a) + toInt(b));
+                return new SymbolValue<>(out, toInteger(a) + toInteger(b));
 
             case REAL:
                 return new SymbolValue<>(out, toReal(a) + toReal(b));
@@ -146,7 +157,7 @@ public class SymbolValue<T> {
 
         switch (out) {
             case INTEGER:
-                return new SymbolValue<>(out, toInt(a) - toInt(b));
+                return new SymbolValue<>(out, toInteger(a) - toInteger(b));
 
             case REAL:
                 return new SymbolValue<>(out, toReal(a) - toReal(b));
@@ -164,7 +175,7 @@ public class SymbolValue<T> {
 
         switch (out) {
             case INTEGER:
-                return new SymbolValue<>(out, toInt(a) * toInt(b));
+                return new SymbolValue<>(out, toInteger(a) * toInteger(b));
 
             case REAL:
                 return new SymbolValue<>(out, toReal(a) * toReal(b));
@@ -178,11 +189,11 @@ public class SymbolValue<T> {
     }
 
     public static SymbolValue<Integer> intDivide(SymbolValue a, SymbolValue b) {
-        return new SymbolValue<>(TypeSpec.INTEGER, toInt(a) / toInt(b));
+        return new SymbolValue<>(TypeSpec.INTEGER, toInteger(a) / toInteger(b));
     }
 
     public static SymbolValue<Integer> intMod(SymbolValue a, SymbolValue b) {
-        return new SymbolValue<>(TypeSpec.INTEGER, toInt(a) % toInt(b));
+        return new SymbolValue<>(TypeSpec.INTEGER, toInteger(a) % toInteger(b));
     }
 
     public static SymbolValue<Float> realDivide(SymbolValue a, SymbolValue b) {
@@ -194,7 +205,7 @@ public class SymbolValue<T> {
 
         switch (out) {
             case INTEGER:
-                return new SymbolValue<>(out, -toInt(a));
+                return new SymbolValue<>(out, -toInteger(a));
 
             case REAL:
                 return new SymbolValue<>(out, -toReal(a));
@@ -212,7 +223,7 @@ public class SymbolValue<T> {
 
         switch (out) {
             case INTEGER:
-                return new SymbolValue<>(out, toInt(a));
+                return new SymbolValue<>(out, toInteger(a));
 
             case REAL:
                 return new SymbolValue<>(out, toReal(a));
@@ -223,5 +234,161 @@ public class SymbolValue<T> {
                 );
                 throw new IllegalArgumentException(message);
         }
+    }
+
+    public static SymbolValue not(SymbolValue a) {
+        return new SymbolValue<>(TypeSpec.BOOLEAN, ! toBoolean(a));
+    }
+
+    public static SymbolValue and(SymbolValue a, SymbolValue b) {
+        return new SymbolValue<>(TypeSpec.BOOLEAN, toBoolean(a) & toBoolean(b));
+    }
+
+    public static SymbolValue or(SymbolValue a, SymbolValue b) {
+        return new SymbolValue<>(TypeSpec.BOOLEAN, toBoolean(a) | toBoolean(b));
+    }
+
+    public static SymbolValue lessThan(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) < toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) < toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
+    }
+
+    public static SymbolValue lessThanOrEquals(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) <= toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) <= toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
+    }
+
+    public static SymbolValue greaterThan(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) > toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) > toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
+    }
+
+    public static SymbolValue greaterThanOrEquals(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) >= toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) >= toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
+    }
+
+    public static SymbolValue equalsValue(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) == toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) == toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
+    }
+
+    public static SymbolValue notEqualsValue(SymbolValue a, SymbolValue b) {
+        TypeSpec convertTo = arithIntOrFloat(a.typeSpec, b.typeSpec);
+        boolean out;
+
+        switch (convertTo) {
+            case INTEGER:
+                out = toInteger(a) != toInteger(b);
+                break;
+
+            case REAL:
+                out = toReal(a) != toReal(b);
+                break;
+
+            default:
+                String message = String.format(
+                        "Do not recognize value %s as a response from arithIntOrFloat",
+                        convertTo.name()
+                );
+                throw new IllegalStateException(message);
+        }
+
+        return new SymbolValue<>(TypeSpec.BOOLEAN, out);
     }
 }

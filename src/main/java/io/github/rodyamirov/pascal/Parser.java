@@ -1,5 +1,6 @@
 package io.github.rodyamirov.pascal;
 
+import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -201,7 +202,7 @@ public class Parser {
     }
 
     private StatementNode assignmentStatement() {
-        // assignmentStatement -> variable ASSIGN expression
+        // assignmentStatement -> variable ASSIGN additiveExpression
         VariableAssignNode var = variableDefinition();
         eatStrict(Token.Type.ASSIGN);
         ExpressionNode right = expression();
@@ -224,15 +225,41 @@ public class Parser {
         return new NoOpNode();
     }
 
+    private static final ImmutableSet<Token.Type> compareTypes = ImmutableSet.<Token.Type>builder()
+            .add(Token.Type.EQUALS).add(Token.Type.NOT_EQUALS).add(Token.Type.LESS_THAN)
+            .add(Token.Type.LESS_THAN_OR_EQUALS).add(Token.Type.GREATER_THAN)
+            .add(Token.Type.GREATER_THAN_OR_EQUALS).build();
+
+    /**
+     * The lowest-precedence operator binding (and thus the "highest" node in terms of being
+     * the first one you go to, to get an "expression")
+     * @return
+     */
     private ExpressionNode expression() {
-        // expression -> factor ([+-] factor)*
-        // expression -> factor | factor [+-] expression
+        ExpressionNode out = additiveExpression();
+
+        // this formulation gets left associativity correct; obvious recursion does not
+        Optional<Token> maybeOpToken;
+        while ((maybeOpToken = eatNonstrict(compareTypes::contains)).isPresent()) {
+            Token opToken = maybeOpToken.get();
+            out = new BinOpNode(out, additiveExpression(), opToken);
+        }
+
+        return out;
+    }
+
+    private static final ImmutableSet<Token.Type> expressionTypes = ImmutableSet.<Token.Type>builder()
+            .add(Token.Type.PLUS).add(Token.Type.MINUS).add(Token.Type.OR).build();
+
+    private ExpressionNode additiveExpression() {
+        // additiveExpression -> factor ([+-] factor)*
+        // additiveExpression -> factor | factor [+-] additiveExpression
 
         ExpressionNode out = factor();
 
         // this formulation gets left associativity correct; obvious recursion does not
         Optional<Token> maybeOpToken;
-        while ((maybeOpToken = eatNonstrict(Token.Type.PLUS, Token.Type.MINUS)).isPresent()) {
+        while ((maybeOpToken = eatNonstrict(expressionTypes::contains)).isPresent()) {
             Token opToken = maybeOpToken.get();
             out = new BinOpNode(out, factor(), opToken);
         }
@@ -240,15 +267,19 @@ public class Parser {
         return out;
     }
 
+    private static final ImmutableSet<Token.Type> factorTypes = ImmutableSet.<Token.Type>builder()
+            .add(Token.Type.TIMES).add(Token.Type.REAL_DIVIDE).add(Token.Type.INT_DIVIDE)
+            .add(Token.Type.MOD).add(Token.Type.AND).build();
+
     private ExpressionNode factor() {
-        // factor -> terminal ([*/] terminal)*
-        // factor -> terminal | terminal [*/] factor
+        // factor -> terminal ([*/ AND] terminal)*
+        // factor -> terminal | terminal [*/ AND] factor
 
         ExpressionNode out = unop();
 
         // this formulation gets left associativity correct; obvious recursion does not
         Optional<Token> maybeOpToken;
-        while ((maybeOpToken = eatNonstrict(Token.Type.TIMES, Token.Type.REAL_DIVIDE, Token.Type.INT_DIVIDE, Token.Type.MOD)).isPresent()) {
+        while ((maybeOpToken = eatNonstrict(factorTypes::contains)).isPresent()) {
             Token opToken = maybeOpToken.get();
             out = new BinOpNode(out, unop(), opToken);
         }
@@ -256,13 +287,16 @@ public class Parser {
         return out;
     }
 
+    private static final ImmutableSet<Token.Type> unopTypes = ImmutableSet.<Token.Type>builder()
+            .add(Token.Type.PLUS).add(Token.Type.MINUS).add(Token.Type.NOT).build();
+
     private ExpressionNode unop() {
-        // unop -> ([+-])* terminal
-        // unop -> terminal | [+-] unop
+        // unop -> ([+-NOT])* terminal
+        // unop -> terminal | [+-NOT] unop
 
         // unops are right associative (in a sense) so recursion handles it well
         Optional<Token> maybeOpToken;
-        if ((maybeOpToken = eatNonstrict(Token.Type.PLUS, Token.Type.MINUS)).isPresent()) {
+        if ((maybeOpToken = eatNonstrict(unopTypes::contains)).isPresent()) {
             Token opToken = maybeOpToken.get();
             return new UnaryOpNode(unop(), opToken);
         } else {

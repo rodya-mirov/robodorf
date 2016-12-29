@@ -3,7 +3,9 @@ package io.github.rodyamirov.pascal;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * Created by richard.rast on 12/22/16.
@@ -25,6 +27,11 @@ public class Tokenizer {
 
         reservedWordsMap.put(standardizeId("TRUE"), Token.TRUE);
         reservedWordsMap.put(standardizeId("FALSE"), Token.FALSE);
+        reservedWordsMap.put(standardizeId("AND"), Token.AND);
+        reservedWordsMap.put(standardizeId("THEN"), Token.THEN);
+        reservedWordsMap.put(standardizeId("OR"), Token.OR);
+        reservedWordsMap.put(standardizeId("ELSE"), Token.ELSE);
+        reservedWordsMap.put(standardizeId("NOT"), Token.NOT);
 
         reservedWordsMap.put(standardizeId("DIV"), Token.INT_DIVIDE);
         reservedWordsMap.put(standardizeId("MOD"), Token.MOD);
@@ -37,6 +44,7 @@ public class Tokenizer {
         return id.toLowerCase();
     }
 
+    private final LinkedList<Token> tokenQueue = new LinkedList<>();
     private final String text;
     private int pos;
 
@@ -149,7 +157,53 @@ public class Tokenizer {
         }
     }
 
+    /**
+     * Returns the next token in the text, advancing the internal counter as it does so.
+     * Iterating `getNextToken` repeatedly will return each Token in the text exactly once,
+     * then return EOF indefinitely when the text is expended.
+     *
+     * @return The next token in the text
+     */
     public Token getNextToken() {
+        if (tokenQueue.size() == 0) {
+            tokenQueue.add(makeToken());
+        }
+
+        return tokenQueue.poll();
+    }
+
+    /**
+     * Alias for peek(0).
+     *
+     * Shows what the next token in the text would be, if getNextToken were called. This does
+     * not have externally visible side effects, so calling it repeatedly is perfectly safe.
+     * Additionally, calling peek does not affect the next call of getNextToken, and does not
+     * incur any performance penalty.
+     *
+     * @return The next token in the text
+     */
+    public Token peek() {
+        return peek(0);
+    }
+
+    /**
+     * Shows what the next-plus-skip token in the text would be, if getNextToken were called.
+     * This does not have externally visible side effects, so calling it repeatedly is perfectly
+     * safe. Additionally, calling peek does not affect the next call of getNextToken, and does not
+     * incur any performance penalty.
+     *
+     * @param skip The number of tokens to skip ahead for the peek
+     * @return The next-plus-skip token in the text
+     */
+    public Token peek(int skip) {
+        while (tokenQueue.size() <= skip) {
+            tokenQueue.add(makeToken());
+        }
+
+        return tokenQueue.get(skip);
+    }
+
+    private Token makeToken() {
         if (atEnd()) {
             return Token.EOF;
         }
@@ -194,14 +248,29 @@ public class Tokenizer {
 
             case ',': advance(); return Token.COMMA;
 
+            case '=': advance(); return Token.EQUALS;
+
+            case '<':
+                if (pos+1 < text.length() && text.charAt(pos+1) == '>') {
+                    advance(); advance(); return Token.NOT_EQUALS;
+                } else if (pos+1 < text.length() && text.charAt(pos+1) == '=') {
+                    advance(); advance(); return Token.LESS_THAN_OR_EQUALS;
+                } else {
+                    advance(); return Token.LESS_THAN;
+                }
+
+            case '>':
+                if (pos + 1 < text.length() && text.charAt(pos+1) == '=') {
+                    advance(); advance(); return Token.GREATER_THAN_OR_EQUALS;
+                } else {
+                    advance(); return Token.GREATER_THAN;
+                }
+
             case ':':
                 if (pos+1 < text.length() && text.charAt(pos+1) == '=') {
-                    advance();
-                    advance();
-                    return Token.ASSIGN;
+                    advance(); advance(); return Token.ASSIGN;
                 } else {
-                    advance();
-                    return Token.COLON;
+                    advance(); return Token.COLON;
                 }
 
             default:

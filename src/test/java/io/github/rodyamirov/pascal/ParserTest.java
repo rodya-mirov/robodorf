@@ -18,7 +18,6 @@ import io.github.rodyamirov.pascal.tree.UnaryOpNode;
 import io.github.rodyamirov.pascal.tree.VariableAssignNode;
 import io.github.rodyamirov.pascal.tree.VariableDeclarationNode;
 import io.github.rodyamirov.pascal.tree.VariableEvalNode;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -199,6 +198,224 @@ public class ParserTest {
                 "true+false",
                 "(true+(false))"
         };
+
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void boolExprTest1() {
+        // tests NOT/OR/AND
+        SyntaxTree tree = new BinOpNode(
+                BooleanConstantNode.make(true),
+                new BinOpNode(
+                        new UnaryOpNode(
+                                new VariableEvalNode(Token.ID("someBool")),
+                                Token.NOT
+                        ),
+                        BooleanConstantNode.make(false),
+                        Token.OR
+                ),
+                Token.AND
+        );
+
+        String[] text = new String[] {
+                "true and (not somebool or false)",
+                "true and ((not somebool) or false)",
+        };
+
+        doParseExpressionTest(text, tree);
+
+        // same, but checks operator precedence
+        tree = new BinOpNode(
+                new BinOpNode(
+                        new UnaryOpNode(
+                                new VariableEvalNode(Token.ID("someBool")),
+                                Token.NOT
+                        ),
+                        BooleanConstantNode.make(false),
+                        Token.OR
+                ),
+                BooleanConstantNode.make(true),
+                Token.AND
+        );
+
+        text = new String[] {
+                "(not somebool or false) and true",
+                "((not somebool) or false) and true"
+        };
+
+        doParseExpressionTest(text, tree);
+
+        // same, but checks operator precedence
+        tree = new BinOpNode(
+                new BinOpNode(
+                        new UnaryOpNode(
+                                new VariableEvalNode(Token.ID("someBool")),
+                                Token.NOT
+                        ),
+                        BooleanConstantNode.make(false),
+                        Token.AND
+                ),
+                BooleanConstantNode.make(true),
+                Token.OR
+        );
+
+        text = new String[] {
+                "(not somebool and false) or true",
+                "((not somebool) and false) or true",
+                "(not somebool) and false or true",
+                "not somebool and false or true"
+        };
+
+        doParseExpressionTest(text, tree);
+
+        // same, but checks operator precedence
+        tree = new BinOpNode(
+                BooleanConstantNode.make(true),
+                new BinOpNode(
+                        new UnaryOpNode(
+                                new VariableEvalNode(Token.ID("someBool")),
+                                Token.NOT
+                        ),
+                        BooleanConstantNode.make(false),
+                        Token.AND
+                ),
+                Token.OR
+        );
+
+        text = new String[] {
+                "true or not somebool and false",
+                "true or (not somebool and false)",
+                "true or ((not somebool) and false)",
+                "true or (not somebool) and false"
+        };
+
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void compareExprTest1() {
+        // just check that the parser recognizes all six comparison operators...
+        String[] text;
+        SyntaxTree tree;
+
+        text = new String[] {
+                "a < b", "(a)<b", "(a<b)", "a<(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.LESS_THAN
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a <= b", "(a)<=b", "(a<=b)", "a<=(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.LESS_THAN_OR_EQUALS
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a <> b", "(a)<>b", "(a<>b)", "a<>(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.NOT_EQUALS
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a > b", "(a)>b", "(a>b)", "a>(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.GREATER_THAN
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a >= b", "(a)>=b", "(a>=b)", "a>=(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.GREATER_THAN_OR_EQUALS
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a = b", "(a)=b", "(a=b)", "a=(b)"
+        };
+        tree = new BinOpNode(
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
+                Token.EQUALS
+        );
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void booleanPrecedenceTest1() {
+        // check operator precedence; not exhaustive because ugh
+        String[] text;
+        SyntaxTree tree;
+
+        text = new String[] {
+                "not a + b and c",
+                "(not a) + b and c",
+                "(not a) + (b and c)"
+        };
+
+        tree = new BinOpNode(
+                new UnaryOpNode(new VariableEvalNode(Token.ID("a")), Token.NOT),
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.AND
+                ),
+                Token.PLUS
+        );
+
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void comparatorPrecedenceTest1() {
+        // check operator precedence; not exhaustive because ugh
+        String[] text;
+        SyntaxTree tree;
+
+        text = new String[] {
+                "1>3+2>3*4",
+                "1>3+2>(3*4)",
+                "1>(3+2)>(3*4)",
+                "(1>(3+2))>(3*4)",
+                "(1>3+2)>(3*4)"
+        };
+
+        tree = new BinOpNode(
+                new BinOpNode(
+                        IntConstantNode.make(1),
+                        new BinOpNode(
+                                IntConstantNode.make(3),
+                                IntConstantNode.make(2),
+                                Token.PLUS
+                        ),
+                        Token.GREATER_THAN
+                ),
+                new BinOpNode(
+                        IntConstantNode.make(3),
+                        IntConstantNode.make(4),
+                        Token.TIMES
+                ),
+                Token.GREATER_THAN
+        );
 
         doParseExpressionTest(text, tree);
     }
