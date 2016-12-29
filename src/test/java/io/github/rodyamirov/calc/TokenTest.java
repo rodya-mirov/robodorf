@@ -47,10 +47,10 @@ public class TokenTest {
 
         assertThat(Token.EOF.toString(), is("Token { TYPE: EOF, VALUE: null }"));
 
-        assertThat(Token.INT(12).toString(), is("Token { TYPE: INT, VALUE: 12 }"));
-        assertThat(Token.INT(-13).toString(), is("Token { TYPE: INT, VALUE: -13 }"));
-        assertThat(Token.INT(1).toString(), is("Token { TYPE: INT, VALUE: 1 }"));
-        assertThat(Token.INT(14).toString(), is("Token { TYPE: INT, VALUE: 14 }"));
+        assertThat(Token.INT(12).toString(), is("Token { TYPE: INTEGER, VALUE: 12 }"));
+        assertThat(Token.INT(-13).toString(), is("Token { TYPE: INTEGER, VALUE: -13 }"));
+        assertThat(Token.INT(1).toString(), is("Token { TYPE: INTEGER, VALUE: 1 }"));
+        assertThat(Token.INT(14).toString(), is("Token { TYPE: INTEGER, VALUE: 14 }"));
     }
 
     @Test

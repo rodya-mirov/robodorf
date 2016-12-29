@@ -32,8 +32,8 @@ import static org.hamcrest.core.Is.is;
  */
 public class ParserTest {
     // the tree is the result of parsing; the strings are various strings which parse to that tree
-    private SyntaxTree exprTree1, exprTree2, exprTree3, exprTree4, exprTree5;
-    private String[] exprText1, exprText2, exprText3, exprText4, exprText5;
+    private SyntaxTree exprTree1, exprTree2, exprTree3, exprTree4, exprTree5, exprTree6;
+    private String[] exprText1, exprText2, exprText3, exprText4, exprText5, exprText6;
 
     private SyntaxTree progTree1, progTree2, progTree3, progTree4;
     private String[] progText1, progText2, progText3, progText4;
@@ -112,6 +112,20 @@ public class ParserTest {
                 "1.1",
                 "(((1.1)))"
         };
+
+        exprTree6 = new BinOpNode(
+                new BinOpNode(
+                        IntConstantNode.make(1),
+                        IntConstantNode.make(2),
+                        Token.MOD
+                ),
+                IntConstantNode.make(3),
+                Token.MOD
+        );
+        exprText6 = new String[] {
+                "1 MoD 2 mod 3",
+                "(1 MOd 2) MOD 3"
+        };
     }
 
     private void doParseExpressionTest(String[] texts, SyntaxTree desired) {
@@ -146,6 +160,11 @@ public class ParserTest {
     @Test
     public void expressionTest5() {
         doParseExpressionTest(exprText5, exprTree5);
+    }
+
+    @Test
+    public void expressionTest6() {
+        doParseExpressionTest(exprText6, exprTree6);
     }
 
     private List<Token<String>> varList(String... ids) {
@@ -190,13 +209,13 @@ public class ParserTest {
                                 list(
                                         new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("number"), Token.ID("other_number")),
-                                                TypeSpec.INT),
+                                                TypeSpec.INTEGER),
                                         new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("ril"), Token.ID("_r")),
                                                 TypeSpec.REAL),
                                         new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("a")),
-                                                TypeSpec.INT)
+                                                TypeSpec.INTEGER)
                                 ),
                                 Collections.emptyList() // no procedures
                         ),
@@ -213,7 +232,7 @@ public class ParserTest {
         progTree3 = new ProgramNode(Token.ID("test3"), new BlockNode(
                 new DeclarationNode(
                         list(
-                                new VariableDeclarationNode(varList("a"), TypeSpec.INT),
+                                new VariableDeclarationNode(varList("a"), TypeSpec.INTEGER),
                                 new VariableDeclarationNode(varList("b"), TypeSpec.REAL)
                         ),
                         Collections.emptyList() // no procedures
@@ -264,7 +283,7 @@ public class ParserTest {
                 new BlockNode(
                         new DeclarationNode(
                                 ImmutableList.of(
-                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")), TypeSpec.INT),
+                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")), TypeSpec.INTEGER),
                                         new VariableDeclarationNode(ImmutableList.of(Token.ID("b"), Token.ID("c")), TypeSpec.REAL)
                                 ),
                                 ImmutableList.of(

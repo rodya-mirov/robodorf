@@ -248,7 +248,7 @@ public class Parser {
 
         // this formulation gets left associativity correct; obvious recursion does not
         Optional<Token> maybeOpToken;
-        while ((maybeOpToken = eatNonstrict(Token.Type.TIMES, Token.Type.REAL_DIVIDE, Token.Type.INT_DIVIDE)).isPresent()) {
+        while ((maybeOpToken = eatNonstrict(Token.Type.TIMES, Token.Type.REAL_DIVIDE, Token.Type.INT_DIVIDE, Token.Type.MOD)).isPresent()) {
             Token opToken = maybeOpToken.get();
             out = new BinOpNode(out, unop(), opToken);
         }
@@ -271,7 +271,7 @@ public class Parser {
     }
 
     private ExpressionNode terminal() {
-        // terminal -> INT | REAL | variable | L_PAREN expr R_PAREN
+        // terminal -> INTEGER | REAL | variable | L_PAREN expr R_PAREN
 
         Optional<Token> maybeToken;
         if ((maybeToken = eatNonstrict(Token.Type.INT_CONSTANT)).isPresent()) {

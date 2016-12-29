@@ -113,7 +113,7 @@ public class Parser {
     }
 
     private SyntaxTree<Integer> bottomExpr() {
-        // bottomExpr -> INT | LPAREN addExpr RPAREN
+        // bottomExpr -> INTEGER | LPAREN addExpr RPAREN
         Token token = eatStrict(Token.Type.INT, Token.Type.L_PAREN);
 
         switch (token.type) {

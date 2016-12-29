@@ -19,13 +19,14 @@ public final class BinOpNode extends ExpressionNode {
 
     // static it up
     private static final ImmutableMap<Token.Type, BiFunction<SymbolValue, SymbolValue, SymbolValue>> evaluations =
-            ImmutableMap.of(
-                    Token.Type.PLUS, SymbolValue::add,
-                    Token.Type.MINUS, SymbolValue::subtract,
-                    Token.Type.TIMES, SymbolValue::multiply,
-                    Token.Type.INT_DIVIDE, SymbolValue::intDivide,
-                    Token.Type.REAL_DIVIDE, SymbolValue::realDivide
-            );
+            ImmutableMap.<Token.Type, BiFunction<SymbolValue, SymbolValue, SymbolValue>>builder() // java 7 fail :(
+                    .put(Token.Type.PLUS, SymbolValue::add)
+                    .put(Token.Type.MINUS, SymbolValue::subtract)
+                    .put(Token.Type.TIMES, SymbolValue::multiply)
+                    .put(Token.Type.INT_DIVIDE, SymbolValue::intDivide)
+                    .put(Token.Type.REAL_DIVIDE, SymbolValue::realDivide)
+                    .put(Token.Type.MOD, SymbolValue::intMod)
+                    .build();
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 
     public BinOpNode(ExpressionNode left, ExpressionNode right, Token opToken) {

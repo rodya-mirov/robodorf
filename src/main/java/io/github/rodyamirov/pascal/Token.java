@@ -11,7 +11,7 @@ public class Token<T> {
 
         VAR_TYPE,
 
-        MINUS, PLUS,
+        MINUS, PLUS, MOD,
         TIMES, REAL_DIVIDE, INT_DIVIDE,
         L_PAREN, R_PAREN,
 
@@ -84,6 +84,7 @@ public class Token<T> {
 
     public static final Token<Void> PLUS = voidToken(Type.PLUS);
     public static final Token<Void> MINUS = voidToken(Type.MINUS);
+    public static final Token<Void> MOD = voidToken(Type.MOD);
 
     public static final Token<Void> TIMES = voidToken(Type.TIMES);
     public static final Token<Void> REAL_DIVIDE = voidToken(Type.REAL_DIVIDE);
@@ -105,6 +106,6 @@ public class Token<T> {
     public static final Token<Void> PROCEDURE = voidToken(Type.PROCEDURE);
     public static final Token<Void> VAR = voidToken(Type.VAR);
 
-    public static final Token<TypeSpec> INT_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.INT);
+    public static final Token<TypeSpec> INT_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.INTEGER);
     public static final Token<TypeSpec> REAL_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.REAL);
 }

@@ -4,7 +4,7 @@ package io.github.rodyamirov.pascal;
  * Created by richard.rast on 12/26/16.
  */
 public enum TypeSpec {
-    REAL, INT;
+    REAL, INTEGER;
 
     public Class getValueClass() {
         return getValueClass(this);
@@ -12,7 +12,7 @@ public enum TypeSpec {
 
     public static Class getValueClass(TypeSpec typeSpec) {
         switch (typeSpec) {
-            case INT: return Integer.class;
+            case INTEGER: return Integer.class;
             case REAL: return Float.class;
 
             default:

@@ -5,7 +5,6 @@ import io.github.rodyamirov.pascal.Token;
 import io.github.rodyamirov.pascal.TypeSpec;
 import io.github.rodyamirov.pascal.visitor.NodeVisitor;
 import io.github.rodyamirov.pascal.visitor.TypeCheckException;
-import io.github.rodyamirov.pascal.visitor.VariableException;
 
 import java.util.Objects;
 
@@ -15,7 +14,7 @@ import java.util.Objects;
 public final class IntConstantNode extends ExpressionNode {
     public final SymbolValue<Integer> value;
 
-    public static final TypeSpec DESIRED_TYPE = TypeSpec.INT;
+    public static final TypeSpec DESIRED_TYPE = TypeSpec.INTEGER;
 
     public IntConstantNode(SymbolValue<Integer> value) {
         if (value.typeSpec != DESIRED_TYPE) {

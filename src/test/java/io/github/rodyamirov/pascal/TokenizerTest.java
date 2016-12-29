@@ -52,12 +52,13 @@ public class TokenizerTest {
 
     @Test
     public void tokenizerTest2() {
-        String text = "dbshdb _d21dn1 _ 12 -*+-/+12-12 div dIv DiV EN END enD _eNd BEGIN bEgIn . .... .";
+        String text = "dbshdb _d21dn1 _ 12 -*+MOD-/mOd+12-12 MoD div dIv DiV EN END enD _eNd BEGIN bEgIn . .... .";
 
         Token[] tokens = new Token[] {
                 Token.ID("dbshdb"), Token.ID("_d21dn1"), Token.ID("_"),
-                Token.INT_CONSTANT(12), Token.MINUS, Token.TIMES, Token.PLUS, Token.MINUS,
-                Token.REAL_DIVIDE, Token.PLUS, Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(12),
+                Token.INT_CONSTANT(12), Token.MINUS, Token.TIMES, Token.PLUS,
+                Token.MOD, Token.MINUS, Token.REAL_DIVIDE, Token.MOD, Token.PLUS,
+                Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(12), Token.MOD,
                 Token.INT_DIVIDE, Token.INT_DIVIDE, Token.INT_DIVIDE,
                 Token.ID("EN"), Token.END, Token.END, Token.ID("_eNd"),
                 Token.BEGIN, Token.BEGIN, Token.DOT, Token.DOT,

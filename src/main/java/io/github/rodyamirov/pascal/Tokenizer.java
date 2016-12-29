@@ -21,6 +21,7 @@ public class Tokenizer {
         reservedWordsMap.put(standardizeId("REAL"), Token.REAL_TYPE);
         reservedWordsMap.put(standardizeId("VAR"), Token.VAR);
         reservedWordsMap.put(standardizeId("PROCEDURE"), Token.PROCEDURE);
+        reservedWordsMap.put(standardizeId("MOD"), Token.MOD);
         reservedWords = ImmutableMap.copyOf(reservedWordsMap);
     }
 

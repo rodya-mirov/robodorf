@@ -26,7 +26,7 @@ public class EvalVisitorTest {
     }
 
     private void doExpressionTest(String toParse, SymbolTable symbolTable, int desiredAnswer) {
-        doExpressionTest(toParse, symbolTable, SymbolValue.make(TypeSpec.INT, desiredAnswer));
+        doExpressionTest(toParse, symbolTable, SymbolValue.make(TypeSpec.INTEGER, desiredAnswer));
     }
 
     private void doExpressionTest(String toParse, SymbolTable symbolTable, float desiredAnswer) {
@@ -62,8 +62,19 @@ public class EvalVisitorTest {
         doExpressionTest("2.3 - 17.1", symbolTable, 2.3f - 17.1f);
         doExpressionTest("2.3/1.12", symbolTable, 2.3f / 1.12f);
 
-        doExpressionTest("1+(2.3*4) / 0.7", symbolTable, 1+(9.2f/0.7f));
+        doExpressionTest("1+(2.3*4) / 0.7", symbolTable, 1 + (9.2f / 0.7f));
         doExpressionTest("(1 div 2) + (1/2) - 1.0", symbolTable, -0.5f);
+    }
+
+    @Test
+    public void exprTest2() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("1 mod 2", symbolTable, 1);
+        doExpressionTest("5 mod 3", symbolTable, 2);
+        doExpressionTest("(5 mod 3) mod 2", symbolTable, 0);
+        doExpressionTest("5 mod (10 mod 4)", symbolTable, 1);
+        doExpressionTest("10 - (7 mod 4)", symbolTable, 7);
     }
 
     @Test
@@ -78,10 +89,10 @@ public class EvalVisitorTest {
                 + " a := 1; "
                 + " end .";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("a"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("a"), TypeSpec.INTEGER).build();
 
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INT, 1));
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
         doProgramTest(prog, desired);
 
         prog = "program _te;"
@@ -92,11 +103,11 @@ public class EvalVisitorTest {
                 + "end.";
 
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("_ab"), TypeSpec.INT)
-                .addSymbol(Token.ID("b"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("_ab"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("_ab"), SymbolValue.make(TypeSpec.INT, 25));
-        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INT, 13));
+        desired.setValue(Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
         doProgramTest(prog, desired);
 
         prog = "program _3GBB;"
@@ -106,9 +117,9 @@ public class EvalVisitorTest {
                 + "int := int-2 "
                 + "end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("int"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("int"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("Int"), SymbolValue.make(TypeSpec.INT, 7));
+        desired.setValue(Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
         doProgramTest(prog, desired);
     }
 
@@ -123,9 +134,9 @@ public class EvalVisitorTest {
                 + "begin ;;;"
                 + "; a := 1 ;"
                 + "; end .";
-        symbolTable = SymbolTable.builder().addSymbol(Token.ID("a"), TypeSpec.INT).build();
+        symbolTable = SymbolTable.builder().addSymbol(Token.ID("a"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INT, 1));
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
         doProgramTest(prog, desired);
 
         prog = "PROGRAM DEP ;"
@@ -135,11 +146,11 @@ public class EvalVisitorTest {
                 + " ;; b:= _ab-12 ;"
                 + "end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("_ab"), TypeSpec.INT)
-                .addSymbol(Token.ID("b"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("_ab"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("_ab"), SymbolValue.make(TypeSpec.INT, 25));
-        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INT, 13));
+        desired.setValue(Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
         doProgramTest(prog, desired);
 
         prog = "PrograM S_ ;"
@@ -149,9 +160,9 @@ public class EvalVisitorTest {
                 + " ;int := int-2 ;"
                 + "  ;; ;;  end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("int"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("int"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("Int"), SymbolValue.make(TypeSpec.INT, 7));
+        desired.setValue(Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
         doProgramTest(prog, desired);
     }
 
@@ -177,26 +188,26 @@ public class EvalVisitorTest {
                 + "var a, b: integer; "
                 + "Begin a := 2; begin a := 3; b := a-1; end; b := a+b; end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("a"), TypeSpec.INT)
-                .addSymbol(Token.ID("b"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("a"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INT, 3));
-        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INT, 5));
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 5));
         doProgramTest(prog, desired);
 
         prog = "program t3; "
                 + "var a, b, c, d: Integer; "
                 + "begin begin begin a:=1; b:=a-1; end; c := a-b; d := a*b-c*a+a*a*a end; end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("a"), TypeSpec.INT)
-                .addSymbol(Token.ID("b"), TypeSpec.INT)
-                .addSymbol(Token.ID("c"), TypeSpec.INT)
-                .addSymbol(Token.ID("d"), TypeSpec.INT).build();
+                .addSymbol(Token.ID("a"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("c"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("d"), TypeSpec.INTEGER).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INT, 1));
-        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INT, 0));
-        desired.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.INT, 1));
-        desired.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.INT, 0));
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 0));
+        desired.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 1));
+        desired.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.INTEGER, 0));
         doProgramTest(prog, desired);
     }
 
@@ -211,13 +222,13 @@ public class EvalVisitorTest {
                 + "c, d: Real;"
                 + "begin a := 1; b := 2; c := 3; d := 4 end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(Token.ID("a"), TypeSpec.INT)
-                .addSymbol(Token.ID("b"), TypeSpec.INT)
+                .addSymbol(Token.ID("a"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER)
                 .addSymbol(Token.ID("c"), TypeSpec.REAL)
                 .addSymbol(Token.ID("d"), TypeSpec.REAL).build();
         desired = new SymbolValueTable(symbolTable);
-        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INT, 1));
-        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INT, 2));
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 2));
         desired.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.REAL, 3.0f));
         desired.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 4.0f));
 
