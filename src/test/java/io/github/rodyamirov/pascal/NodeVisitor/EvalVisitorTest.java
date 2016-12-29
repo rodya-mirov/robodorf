@@ -88,6 +88,63 @@ public class EvalVisitorTest {
         doExpressionTest("true", symbolTable, true);
         doExpressionTest("TrUe", symbolTable, true);
         doExpressionTest("FALSE", symbolTable, false);
+
+        doExpressionTest("1 < 1", symbolTable, false);
+        doExpressionTest("1 < 2", symbolTable, true);
+        doExpressionTest("2 < 2", symbolTable, false);
+        doExpressionTest("2 < 1", symbolTable, false);
+
+        doExpressionTest("1 <= 1", symbolTable, true);
+        doExpressionTest("1 <= 2", symbolTable, true);
+        doExpressionTest("2 <= 2", symbolTable, true);
+        doExpressionTest("2 <= 1", symbolTable, false);
+
+        doExpressionTest("1 <> 1", symbolTable, false);
+        doExpressionTest("1 <> 2", symbolTable, true);
+        doExpressionTest("2 <> 2", symbolTable, false);
+        doExpressionTest("2 <> 1", symbolTable, true);
+
+        doExpressionTest("1 > 1", symbolTable, false);
+        doExpressionTest("1 > 2", symbolTable, false);
+        doExpressionTest("2 > 2", symbolTable, false);
+        doExpressionTest("2 > 1", symbolTable, true);
+
+        doExpressionTest("1 >= 1", symbolTable, true);
+        doExpressionTest("1 >= 2", symbolTable, false);
+        doExpressionTest("2 >= 2", symbolTable, true);
+        doExpressionTest("2 >= 1", symbolTable, true);
+
+        doExpressionTest("1 = 1", symbolTable, true);
+        doExpressionTest("1 = 2", symbolTable, false);
+        doExpressionTest("2 = 2", symbolTable, true);
+        doExpressionTest("2 = 1", symbolTable, false);
+    }
+
+    @Test
+    public void exprTest4() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("3.1 < 3", symbolTable, false);
+        doExpressionTest("3.1 <= 3", symbolTable, false);
+        doExpressionTest("3.1 <> 3", symbolTable, true);
+        doExpressionTest("3.1 > 3", symbolTable, true);
+        doExpressionTest("3.1 >= 3", symbolTable, true);
+        doExpressionTest("3.1 = 3", symbolTable, false);
+
+        doExpressionTest("3.0 < 3", symbolTable, false);
+        doExpressionTest("3.0 <= 3", symbolTable, true);
+        doExpressionTest("3.0 <> 3", symbolTable, false);
+        doExpressionTest("3.0 = 3", symbolTable, true);
+        doExpressionTest("3.0 > 3", symbolTable, false);
+        doExpressionTest("3.0 >= 3", symbolTable, true);
+    }
+
+    @Test
+    public void exprTest5() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("3.1 < 12.0*4-2", symbolTable, true);
+        doExpressionTest("12.0-7.9 >= 1*4+6", symbolTable, false);
     }
 
     @Test
