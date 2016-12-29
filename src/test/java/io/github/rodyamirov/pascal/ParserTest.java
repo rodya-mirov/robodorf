@@ -332,6 +332,68 @@ public class ParserTest {
     }
 
     @Test
+    public void boolExprTest2() {
+        String[] text;
+        SyntaxTree tree;
+
+        text = new String[] {
+                "a or else b and c",
+                "a or else (b and c)",
+        };
+        tree = new OrElseNode(
+                new VariableEvalNode(Token.ID("a")),
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.AND
+                )
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a or else b or c",
+                "a or else (b or c)"
+        };
+        tree = new OrElseNode(
+                new VariableEvalNode(Token.ID("a")),
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.OR
+                )
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a and then b or c",
+                "a and then (b or c)"
+        };
+        tree = new AndThenNode(
+                new VariableEvalNode(Token.ID("a")),
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.OR
+                )
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a and then b and c",
+                "a and then (b and c)"
+        };
+        tree = new AndThenNode(
+                new VariableEvalNode(Token.ID("a")),
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.AND
+                )
+        );
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
     public void compareExprTest1() {
         // just check that the parser recognizes all six comparison operators...
         String[] text;
@@ -420,6 +482,52 @@ public class ParserTest {
                 Token.PLUS
         );
 
+        doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void booleanPrecedenceTest2() {
+        String[] text;
+        SyntaxTree tree;
+
+        text = new String[] {
+                "a or b and c or else d",
+                "a or (b and c) or else d",
+                "(a or (b and c)) or else d",
+                "(a or b and c) or else d"
+        };
+        tree = new OrElseNode(
+                new BinOpNode(
+                        new VariableEvalNode(Token.ID("a")),
+                        new BinOpNode(
+                                new VariableEvalNode(Token.ID("b")),
+                                new VariableEvalNode(Token.ID("c")),
+                                Token.AND
+                        ),
+                        Token.OR
+                ),
+                new VariableEvalNode(Token.ID("d"))
+        );
+        doParseExpressionTest(text, tree);
+
+        text = new String[] {
+                "a and b or c or else d",
+                "(a and b) or c or else d",
+                "((a and b) or c) or else d",
+                "(a and b or c) or else d"
+        };
+        tree = new OrElseNode(
+                new BinOpNode(
+                        new BinOpNode(
+                                new VariableEvalNode(Token.ID("a")),
+                                new VariableEvalNode(Token.ID("b")),
+                                Token.AND
+                        ),
+                        new VariableEvalNode(Token.ID("c")),
+                        Token.OR
+                ),
+                new VariableEvalNode(Token.ID("d"))
+        );
         doParseExpressionTest(text, tree);
     }
 
