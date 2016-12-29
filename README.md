@@ -2,13 +2,13 @@
 
 (working title)
 
-This is a partial interpreter for Pascal. Essentially, I was going through Ruslan Spivak's "Let's Build a Simple Interpreter" series<sup>[1](#footnote1)</sup> and building the associated logic in Java as I went.
+This is a partial interpreter for Pascal. Essentially, I was going through Ruslan Spivak's "Let's Build a Simple Interpreter" series<sup><a name="footnote1src">[[1]](#footnote1target)</a></sup> and building the associated logic in Java as I went.
 
 I've added a few features that aren't in the tutorial yet (e.g. type checking) and lots of tests, but essentially this is just an implementation of that guide.
 
 For me, this is part of a bigger project that will be on another repo, and which has nothing to do with Pascal. For you the reader, I hope this provides value on its own!
 
-<a name="footnote1">[1]</a> As of writing, 12 parts have been published; the first one is [here](https://ruslanspivak.com/lsbasi-part1/).
+<a name="footnote1target">[[1]](#footnote1src)</a> As of writing, Ruslan's blog has 12 parts in the series; the first one is [here](https://ruslanspivak.com/lsbasi-part1/).
 
 ## Using the Program
 

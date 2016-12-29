@@ -7,7 +7,7 @@ import java.util.Objects;
  */
 public class Token<T> {
     public enum Type {
-        INT_CONSTANT, REAL_CONSTANT,
+        INTEGER_CONSTANT, REAL_CONSTANT, BOOLEAN_CONSTANT,
 
         VAR_TYPE,
 
@@ -64,11 +64,15 @@ public class Token<T> {
     }
 
     public static Token<Integer> INT_CONSTANT(int value) {
-        return new Token<>(Type.INT_CONSTANT, value);
+        return new Token<>(Type.INTEGER_CONSTANT, value);
     }
 
     public static Token<Float> REAL_CONSTANT(float value) {
         return new Token<>(Type.REAL_CONSTANT, value);
+    }
+
+    public static Token<Boolean> BOOLEAN_CONSTANT(boolean value) {
+        return new Token<>(Type.BOOLEAN_CONSTANT, value);
     }
 
     public static Token<String> ID(String value) {
@@ -106,6 +110,10 @@ public class Token<T> {
     public static final Token<Void> PROCEDURE = voidToken(Type.PROCEDURE);
     public static final Token<Void> VAR = voidToken(Type.VAR);
 
-    public static final Token<TypeSpec> INT_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.INTEGER);
+    public static final Token<Boolean> TRUE = BOOLEAN_CONSTANT(true);
+    public static final Token<Boolean> FALSE = BOOLEAN_CONSTANT(false);
+
+    public static final Token<TypeSpec> INTEGER_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.INTEGER);
     public static final Token<TypeSpec> REAL_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.REAL);
+    public static final Token<TypeSpec> BOOLEAN_TYPE = new Token<>(Type.VAR_TYPE, TypeSpec.BOOLEAN);
 }

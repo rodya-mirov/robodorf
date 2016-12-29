@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * Created by richard.rast on 12/26/16.
  */
-public final class RealConstantNode extends ExpressionNode {
+public final class RealConstantNode extends TerminalExpressionNode {
     public final SymbolValue<Float> value;
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.REAL;

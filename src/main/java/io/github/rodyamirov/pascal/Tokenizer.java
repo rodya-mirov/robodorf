@@ -15,12 +15,18 @@ public class Tokenizer {
         Map<String, Token> reservedWordsMap = new HashMap<>();
         reservedWordsMap.put(standardizeId("BEGIN"), Token.BEGIN);
         reservedWordsMap.put(standardizeId("END"), Token.END);
-        reservedWordsMap.put(standardizeId("DIV"), Token.INT_DIVIDE);
         reservedWordsMap.put(standardizeId("PROGRAM"), Token.PROGRAM);
-        reservedWordsMap.put(standardizeId("INTEGER"), Token.INT_TYPE);
-        reservedWordsMap.put(standardizeId("REAL"), Token.REAL_TYPE);
-        reservedWordsMap.put(standardizeId("VAR"), Token.VAR);
         reservedWordsMap.put(standardizeId("PROCEDURE"), Token.PROCEDURE);
+        reservedWordsMap.put(standardizeId("VAR"), Token.VAR);
+
+        reservedWordsMap.put(standardizeId("INTEGER"), Token.INTEGER_TYPE);
+        reservedWordsMap.put(standardizeId("REAL"), Token.REAL_TYPE);
+        reservedWordsMap.put(standardizeId("BOOLEAN"), Token.BOOLEAN_TYPE);
+
+        reservedWordsMap.put(standardizeId("TRUE"), Token.TRUE);
+        reservedWordsMap.put(standardizeId("FALSE"), Token.FALSE);
+
+        reservedWordsMap.put(standardizeId("DIV"), Token.INT_DIVIDE);
         reservedWordsMap.put(standardizeId("MOD"), Token.MOD);
         reservedWords = ImmutableMap.copyOf(reservedWordsMap);
     }

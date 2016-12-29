@@ -33,6 +33,10 @@ public class EvalVisitorTest {
         doExpressionTest(toParse, symbolTable, SymbolValue.make(TypeSpec.REAL, desiredAnswer));
     }
 
+    private void doExpressionTest(String toParse, SymbolTable symbolTable, boolean desiredAnswer) {
+        doExpressionTest(toParse, symbolTable, SymbolValue.make(TypeSpec.BOOLEAN, desiredAnswer));
+    }
+
     private void doProgramTest(String toParse, SymbolValueTable desiredEndState) {
         Parser parser = new Parser(toParse);
         ProgramNode parseTree = parser.parseProgram();
@@ -75,6 +79,15 @@ public class EvalVisitorTest {
         doExpressionTest("(5 mod 3) mod 2", symbolTable, 0);
         doExpressionTest("5 mod (10 mod 4)", symbolTable, 1);
         doExpressionTest("10 - (7 mod 4)", symbolTable, 7);
+    }
+
+    @Test
+    public void exprTest3() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("true", symbolTable, true);
+        doExpressionTest("TrUe", symbolTable, true);
+        doExpressionTest("FALSE", symbolTable, false);
     }
 
     @Test
@@ -233,6 +246,13 @@ public class EvalVisitorTest {
         desired.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 4.0f));
 
         doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void mixedTypeTest2() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable desired;
 
         prog = "program test2;"
                 + "var a, b: Real;"
@@ -245,6 +265,27 @@ public class EvalVisitorTest {
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 1.25f));
         desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4*1.25f*1.25f+4));
+
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void boolTest1() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable desired;
+
+        prog = "program testBo;"
+                + "var a, b: BooleaN;"
+                + "begin { the program }"
+                + "a := True; b := True; a := False;"
+                + "end .";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("b"), TypeSpec.BOOLEAN).build();
+        desired = new SymbolValueTable(symbolTable);
+        desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.BOOLEAN, true));
 
         doProgramTest(prog, desired);
     }

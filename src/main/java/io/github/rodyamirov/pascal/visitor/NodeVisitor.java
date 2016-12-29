@@ -3,6 +3,7 @@ package io.github.rodyamirov.pascal.visitor;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
+import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
@@ -37,6 +38,7 @@ public abstract class NodeVisitor {
     public abstract void visit(AssignNode assignNode);
     public abstract void visit(BinOpNode binOpNode);
     public abstract void visit(BlockNode blockNode);
+    public abstract void visit(BooleanConstantNode booleanConstantNode);
     public abstract void visit(CompoundNode compoundNode);
     public abstract void visit(DeclarationNode declarationNode);
     public abstract void visit(IntConstantNode intConstantNode);

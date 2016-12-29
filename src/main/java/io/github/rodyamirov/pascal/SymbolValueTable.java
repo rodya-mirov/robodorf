@@ -1,6 +1,5 @@
 package io.github.rodyamirov.pascal;
 
-import io.github.rodyamirov.pascal.visitor.TypeCheckException;
 import io.github.rodyamirov.pascal.visitor.VariableException;
 
 import java.util.HashMap;

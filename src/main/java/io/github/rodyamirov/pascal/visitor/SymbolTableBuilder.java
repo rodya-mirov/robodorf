@@ -5,6 +5,7 @@ import io.github.rodyamirov.pascal.Token;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
+import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
@@ -51,7 +52,7 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(ProcedureDeclarationNode procedureDeclarationNode) {
-        throw new IllegalArgumentException("Not yet implemented!");
+        throw TODOException.make();
     }
 
     @Override
@@ -88,6 +89,11 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(IntConstantNode intConstantNode) {
+        // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(BooleanConstantNode booleanConstantNode) {
         // does nothing; we're only concerned with variable declarations
     }
 

@@ -3,6 +3,7 @@ package io.github.rodyamirov.pascal;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
+import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
@@ -18,7 +19,6 @@ import io.github.rodyamirov.pascal.tree.VariableDeclarationNode;
 import io.github.rodyamirov.pascal.tree.VariableEvalNode;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -271,15 +271,18 @@ public class Parser {
     }
 
     private ExpressionNode terminal() {
-        // terminal -> INTEGER | REAL | variable | L_PAREN expr R_PAREN
+        // terminal -> INTEGER | REAL | BOOLEAN | variable | L_PAREN expr R_PAREN
 
         Optional<Token> maybeToken;
-        if ((maybeToken = eatNonstrict(Token.Type.INT_CONSTANT)).isPresent()) {
+        if ((maybeToken = eatNonstrict(Token.Type.INTEGER_CONSTANT)).isPresent()) {
             Token intToken = maybeToken.get();
             return IntConstantNode.make(intToken);
         } else if ((maybeToken = eatNonstrict(Token.Type.REAL_CONSTANT)).isPresent()) {
             Token realToken = maybeToken.get();
             return RealConstantNode.make(realToken);
+        } else if ((maybeToken = eatNonstrict(Token.Type.BOOLEAN_CONSTANT)).isPresent()) {
+            Token boolToken = maybeToken.get();
+            return BooleanConstantNode.make(boolToken);
         } else if ((maybeToken = eatNonstrict(Token.Type.ID)).isPresent()) {
             Token variableToken = maybeToken.get();
             return new VariableEvalNode(variableToken);

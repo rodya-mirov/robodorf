@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * Created by richard.rast on 12/24/16.
  */
-public final class IntConstantNode extends ExpressionNode {
+public final class IntConstantNode extends TerminalExpressionNode {
     public final SymbolValue<Integer> value;
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.INTEGER;

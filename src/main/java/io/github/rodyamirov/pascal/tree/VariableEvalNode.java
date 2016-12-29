@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Created by richard.rast on 12/22/16.
  */
-public final class VariableEvalNode extends ExpressionNode {
+public final class VariableEvalNode extends TerminalExpressionNode {
     public final Token idToken;
     public final String id;
 

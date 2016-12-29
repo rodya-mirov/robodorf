@@ -7,6 +7,7 @@ import io.github.rodyamirov.pascal.Token;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
+import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
@@ -80,12 +81,22 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(ProcedureDeclarationNode procedureDeclarationNode) {
-        throw new IllegalArgumentException("Not yet implemented!");
+        throw TODOException.make();
     }
 
     @Override
     public void visit(RealConstantNode realConstantNode) {
         resultStack.push(realConstantNode.value);
+    }
+
+    @Override
+    public void visit(IntConstantNode constantNode) {
+        resultStack.push(constantNode.value);
+    }
+
+    @Override
+    public void visit(BooleanConstantNode constantNode) {
+        resultStack.push(constantNode.value);
     }
 
     @Override
@@ -131,11 +142,6 @@ public class EvalVisitor extends NodeVisitor {
         for (StatementNode statement : compoundNode.statements) {
             statement.acceptVisit(this);
         }
-    }
-
-    @Override
-    public void visit(IntConstantNode constantNode) {
-        resultStack.push(constantNode.value);
     }
 
     @Override

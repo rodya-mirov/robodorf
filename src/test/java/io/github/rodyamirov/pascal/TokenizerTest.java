@@ -34,6 +34,9 @@ public class TokenizerTest {
         thrown.expectMessage(is(errorMessage));
 
         tokenizer.getNextToken();
+
+        // set up for the next test
+        thrown = ExpectedException.none();
     }
 
     @Test
@@ -123,6 +126,23 @@ public class TokenizerTest {
     }
 
     @Test
+    public void typeTest() {
+        // NB: not a valid variable declaration set, some are initialized twice
+        // not worried about it from a tokenizer perspective
+        String text = "var a, b, int: integer; b, c, float: real; c, d, bool: boolean;";
+        Token[] correct = new Token[] {
+                Token.VAR, Token.ID("a"), Token.COMMA, Token.ID("b"), Token.COMMA, Token.ID("int"),
+                Token.COLON, Token.INTEGER_TYPE, Token.SEMI, Token.ID("b"), Token.COMMA, Token.ID("c"),
+                Token.COMMA, Token.ID("float"), Token.COLON, Token.REAL_TYPE, Token.SEMI,
+                Token.ID("c"), Token.COMMA, Token.ID("d"), Token.COMMA, Token.ID("Bool"),
+                Token.COLON, Token.BOOLEAN_TYPE, Token.SEMI,
+                Token.EOF, Token.EOF, Token.EOF
+        };
+
+        doTokenizerTest(text, correct);
+    }
+
+    @Test
     public void operatorsTest() {
         String text = "+*div-/+DiV+//";
         Token[] correct = new Token[] {
@@ -135,12 +155,14 @@ public class TokenizerTest {
 
     @Test
     public void mixedTest() {
-        String text = "\t12- 13+DIV+\n-/\t1- 5";
+        String text = "\t12- 13+DIV+\n-/\t1- 5 mod div true falsE FaLse TrUE F T";
         Token[] correct = new Token[] {
                 Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(13),
                 Token.PLUS, Token.INT_DIVIDE, Token.PLUS,
                 Token.MINUS, Token.REAL_DIVIDE, Token.INT_CONSTANT(1),
                 Token.MINUS, Token.INT_CONSTANT(5),
+                Token.MOD, Token.INT_DIVIDE, Token.TRUE, Token.FALSE, Token.FALSE,
+                Token.TRUE, Token.ID("F"), Token.ID("T"),
                 Token.EOF, Token.EOF, Token.EOF }; // and so on
 
         doTokenizerTest(text, correct);

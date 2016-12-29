@@ -4,7 +4,7 @@ package io.github.rodyamirov.pascal;
  * Created by richard.rast on 12/26/16.
  */
 public enum TypeSpec {
-    REAL, INTEGER;
+    REAL, INTEGER, BOOLEAN;
 
     public Class getValueClass() {
         return getValueClass(this);
@@ -14,6 +14,7 @@ public enum TypeSpec {
         switch (typeSpec) {
             case INTEGER: return Integer.class;
             case REAL: return Float.class;
+            case BOOLEAN: return Boolean.class;
 
             default:
                 String errorMessage = String.format(
