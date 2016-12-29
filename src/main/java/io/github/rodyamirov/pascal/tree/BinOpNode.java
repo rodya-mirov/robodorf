@@ -26,6 +26,16 @@ public final class BinOpNode extends ExpressionNode {
                     .put(Token.Type.INT_DIVIDE, SymbolValue::intDivide)
                     .put(Token.Type.REAL_DIVIDE, SymbolValue::realDivide)
                     .put(Token.Type.MOD, SymbolValue::intMod)
+
+                    .put(Token.Type.AND, SymbolValue::and)
+                    .put(Token.Type.OR, SymbolValue::or)
+
+                    .put(Token.Type.LESS_THAN, SymbolValue::lessThan)
+                    .put(Token.Type.LESS_THAN_OR_EQUALS, SymbolValue::lessThanOrEquals)
+                    .put(Token.Type.GREATER_THAN, SymbolValue::greaterThan)
+                    .put(Token.Type.GREATER_THAN_OR_EQUALS, SymbolValue::greaterThanOrEquals)
+                    .put(Token.Type.EQUALS, SymbolValue::equalsValue)
+                    .put(Token.Type.NOT_EQUALS, SymbolValue::notEqualsValue)
                     .build();
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 

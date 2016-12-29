@@ -17,7 +17,24 @@ public class TokenizerTest {
     private void doTokenizerTest(String text, Token[] tokens) {
         Tokenizer tokenizer = new Tokenizer(text);
         for (Token token : tokens) {
+            for (int reps = 0; reps < 5; reps++) {
+                // this basically just checks that `peek` works as intended
+                assertThat(tokenizer.peek(), is(token));
+            }
             assertThat(tokenizer.getNextToken(), is(token));
+        }
+
+        // more peek tests
+        tokenizer = new Tokenizer(text);
+        for (int i = 0; i < tokens.length; i++) {
+            Token current = tokens[i];
+
+            for (int skip = 5; skip + i < tokens.length; skip += 3) {
+                Token rando = tokens[i + skip];
+                assertThat(tokenizer.peek(skip), is(rando));
+            }
+
+            assertThat(tokenizer.getNextToken(), is(current));
         }
     }
 
@@ -155,13 +172,14 @@ public class TokenizerTest {
 
     @Test
     public void mixedTest() {
-        String text = "\t12- 13+DIV+\n-/\t1- 5 mod div true falsE FaLse TrUE F T";
+        String text = "\t12- 13+DIV+\n-/\t1- 5 mod AnD thEn or ELSE div true falsE FaLse TrUE F T";
         Token[] correct = new Token[] {
                 Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(13),
                 Token.PLUS, Token.INT_DIVIDE, Token.PLUS,
                 Token.MINUS, Token.REAL_DIVIDE, Token.INT_CONSTANT(1),
                 Token.MINUS, Token.INT_CONSTANT(5),
-                Token.MOD, Token.INT_DIVIDE, Token.TRUE, Token.FALSE, Token.FALSE,
+                Token.MOD, Token.AND, Token.THEN, Token.OR, Token.ELSE,
+                Token.INT_DIVIDE, Token.TRUE, Token.FALSE, Token.FALSE,
                 Token.TRUE, Token.ID("F"), Token.ID("T"),
                 Token.EOF, Token.EOF, Token.EOF }; // and so on
 
@@ -177,6 +195,23 @@ public class TokenizerTest {
                 Token.L_PAREN, Token.L_PAREN, Token.R_PAREN, Token.L_PAREN,
                 Token.R_PAREN, Token.R_PAREN, Token.R_PAREN, Token.R_PAREN,
                 Token.L_PAREN, Token.L_PAREN, Token.L_PAREN, Token.L_PAREN,
+                Token.EOF
+        };
+
+        doTokenizerTest(text, correct);
+    }
+
+    @Test
+    public void conditionalsTest() {
+        // note that == is equivalent to = =
+        // the tokenizer doesn't think anything about == as a symbol
+        String text = "and else or then < > <> >= <= not = ==";
+
+        Token[] correct = new Token[] {
+                Token.AND, Token.ELSE, Token.OR, Token.THEN, Token.LESS_THAN,
+                Token.GREATER_THAN, Token.NOT_EQUALS, Token.GREATER_THAN_OR_EQUALS,
+                Token.LESS_THAN_OR_EQUALS, Token.NOT, Token.EQUALS,
+                Token.EQUALS, Token.EQUALS,
                 Token.EOF
         };
 

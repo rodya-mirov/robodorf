@@ -21,7 +21,8 @@ public final class UnaryOpNode extends ExpressionNode {
     private static final ImmutableMap<Token.Type, Function<SymbolValue, SymbolValue>> evaluations =
             ImmutableMap.of(
                     Token.Type.PLUS, SymbolValue::pos,
-                    Token.Type.MINUS, SymbolValue::neg
+                    Token.Type.MINUS, SymbolValue::neg,
+                    Token.Type.NOT, SymbolValue::not
             );
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 

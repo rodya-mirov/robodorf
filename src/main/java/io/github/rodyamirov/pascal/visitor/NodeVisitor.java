@@ -1,5 +1,6 @@
 package io.github.rodyamirov.pascal.visitor;
 
+import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
 import io.github.rodyamirov.pascal.tree.BlockNode;
@@ -8,6 +9,7 @@ import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
+import io.github.rodyamirov.pascal.tree.OrElseNode;
 import io.github.rodyamirov.pascal.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.pascal.tree.ProgramNode;
 import io.github.rodyamirov.pascal.tree.RealConstantNode;
@@ -35,6 +37,7 @@ import io.github.rodyamirov.pascal.tree.VariableEvalNode;
  * Created by richard.rast on 12/24/16.
  */
 public abstract class NodeVisitor {
+    public abstract void visit(AndThenNode andThenNode);
     public abstract void visit(AssignNode assignNode);
     public abstract void visit(BinOpNode binOpNode);
     public abstract void visit(BlockNode blockNode);
@@ -43,6 +46,7 @@ public abstract class NodeVisitor {
     public abstract void visit(DeclarationNode declarationNode);
     public abstract void visit(IntConstantNode intConstantNode);
     public abstract void visit(NoOpNode noOpNode);
+    public abstract void visit(OrElseNode orElseNode);
     public abstract void visit(ProcedureDeclarationNode procedureDeclarationNode);
     public abstract void visit(ProgramNode programNode);
     public abstract void visit(RealConstantNode intConstantNode);

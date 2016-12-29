@@ -88,6 +88,63 @@ public class EvalVisitorTest {
         doExpressionTest("true", symbolTable, true);
         doExpressionTest("TrUe", symbolTable, true);
         doExpressionTest("FALSE", symbolTable, false);
+
+        doExpressionTest("1 < 1", symbolTable, false);
+        doExpressionTest("1 < 2", symbolTable, true);
+        doExpressionTest("2 < 2", symbolTable, false);
+        doExpressionTest("2 < 1", symbolTable, false);
+
+        doExpressionTest("1 <= 1", symbolTable, true);
+        doExpressionTest("1 <= 2", symbolTable, true);
+        doExpressionTest("2 <= 2", symbolTable, true);
+        doExpressionTest("2 <= 1", symbolTable, false);
+
+        doExpressionTest("1 <> 1", symbolTable, false);
+        doExpressionTest("1 <> 2", symbolTable, true);
+        doExpressionTest("2 <> 2", symbolTable, false);
+        doExpressionTest("2 <> 1", symbolTable, true);
+
+        doExpressionTest("1 > 1", symbolTable, false);
+        doExpressionTest("1 > 2", symbolTable, false);
+        doExpressionTest("2 > 2", symbolTable, false);
+        doExpressionTest("2 > 1", symbolTable, true);
+
+        doExpressionTest("1 >= 1", symbolTable, true);
+        doExpressionTest("1 >= 2", symbolTable, false);
+        doExpressionTest("2 >= 2", symbolTable, true);
+        doExpressionTest("2 >= 1", symbolTable, true);
+
+        doExpressionTest("1 = 1", symbolTable, true);
+        doExpressionTest("1 = 2", symbolTable, false);
+        doExpressionTest("2 = 2", symbolTable, true);
+        doExpressionTest("2 = 1", symbolTable, false);
+    }
+
+    @Test
+    public void exprTest4() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("3.1 < 3", symbolTable, false);
+        doExpressionTest("3.1 <= 3", symbolTable, false);
+        doExpressionTest("3.1 <> 3", symbolTable, true);
+        doExpressionTest("3.1 > 3", symbolTable, true);
+        doExpressionTest("3.1 >= 3", symbolTable, true);
+        doExpressionTest("3.1 = 3", symbolTable, false);
+
+        doExpressionTest("3.0 < 3", symbolTable, false);
+        doExpressionTest("3.0 <= 3", symbolTable, true);
+        doExpressionTest("3.0 <> 3", symbolTable, false);
+        doExpressionTest("3.0 = 3", symbolTable, true);
+        doExpressionTest("3.0 > 3", symbolTable, false);
+        doExpressionTest("3.0 >= 3", symbolTable, true);
+    }
+
+    @Test
+    public void exprTest5() {
+        SymbolTable symbolTable = SymbolTable.empty();
+
+        doExpressionTest("3.1 < 12.0*4-2", symbolTable, true);
+        doExpressionTest("12.0-7.9 >= 1*4+6", symbolTable, false);
     }
 
     @Test
@@ -276,17 +333,100 @@ public class EvalVisitorTest {
         SymbolValueTable desired;
 
         prog = "program testBo;"
-                + "var a, b: BooleaN;"
+                + "var a, b, c, d, e, f: BooleaN;"
                 + "begin { the program }"
                 + "a := True; b := True; a := False;"
+                + "c := a and b; d := a or b;"
+                + "e := not a; f := not b "
                 + "end .";
         symbolTable = SymbolTable.builder()
                 .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
-                .addSymbol(Token.ID("b"), TypeSpec.BOOLEAN).build();
+                .addSymbol(Token.ID("b"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("c"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("d"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("e"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("f"), TypeSpec.BOOLEAN).build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        desired.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        desired.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        desired.setValue(Token.ID("e"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        desired.setValue(Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
 
         doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void boolTest2() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program idk {whatever};"
+                + "var a, b: real; c, d: integer; e, f, g, h: boolean;"
+                + "begin {my thing!}"
+                + " a := 2; b:= 3.1; c := 12; d := c*c-4;"
+                //  e := a < b or c < d;  <-- doesn't work; in pascal or's precedence is way too high and does "b or c"
+                + " e := (a < b) or (c < d);"               // true
+                + " f := a<>b;"                         // true
+                + " g := (a > 5) or not (b < c);"          // false
+                + " h := (a >= 12) or (b <= 2) or (c=12) and (d = c*c-4) " // true
+                + "end {the whole thing{nested} syntax error! nope} .";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.REAL).addSymbol(Token.ID("b"), TypeSpec.REAL)
+                .addSymbol(Token.ID("c"), TypeSpec.INTEGER).addSymbol(Token.ID("d"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("e"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("f"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("g"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("h"), TypeSpec.BOOLEAN).build();
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 2.0f));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 3.1f));
+        symbolValueTable.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.INTEGER, 140));
+        symbolValueTable.setValue(Token.ID("e"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        symbolValueTable.setValue(Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+
+        doProgramTest(prog, symbolValueTable);
+    }
+
+    @Test
+    public void boolTest3() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program idk3 {whatever};"
+                + "var a, b: real; c, d: integer; e, f, g, h: boolean;"
+                + "begin {my thing!}"
+                + " a := 2; b:= 3.1; c := 12; d := c*c-4;"
+                //  e := a < b or c < d;  <-- doesn't work; in pascal or's precedence is way too high and does "b or c"
+                + " e := a<b or else c<d;"         // true
+                + " f := a=b and then g;"          // true; note g not being defined isn't a problem because of short circuiting
+                + " g := a > 5 or else not (b < c);"  // false
+                + " h := a >= 12 or else b <= 2 or else (c=12 and then d = c*c-4) " // true
+                + "end {the whole thing{nested} syntax error! nope} .";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.REAL).addSymbol(Token.ID("b"), TypeSpec.REAL)
+                .addSymbol(Token.ID("c"), TypeSpec.INTEGER).addSymbol(Token.ID("d"), TypeSpec.INTEGER)
+                .addSymbol(Token.ID("e"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("f"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("g"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("h"), TypeSpec.BOOLEAN).build();
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 2.0f));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 3.1f));
+        symbolValueTable.setValue(Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(Token.ID("d"), SymbolValue.make(TypeSpec.INTEGER, 140));
+
+        symbolValueTable.setValue(Token.ID("e"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        symbolValueTable.setValue(Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        symbolValueTable.setValue(Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+
+        doProgramTest(prog, symbolValueTable);
     }
 }

@@ -17,6 +17,12 @@ public class Token<T> {
 
         COMMA, COLON,
 
+        AND, OR, NOT,
+
+        IF, THEN, ELSE,
+
+        EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS,
+
         PROGRAM,        // PROGRAM
         PROCEDURE,      // PROCEDURE
         VAR,            // VAR
@@ -85,6 +91,19 @@ public class Token<T> {
     }
 
     public static final Token<Void> EOF = voidToken(Type.EOF);
+
+    public static final Token<Void> AND = voidToken(Type.AND);
+    public static final Token<Void> OR = voidToken(Type.OR);
+    public static final Token<Void> NOT = voidToken(Type.NOT);
+    public static final Token<Void> THEN = voidToken(Type.THEN);
+    public static final Token<Void> ELSE = voidToken(Type.ELSE);
+
+    public static final Token<Void> EQUALS = voidToken(Type.EQUALS);
+    public static final Token<Void> NOT_EQUALS = voidToken(Type.NOT_EQUALS);
+    public static final Token<Void> LESS_THAN = voidToken(Type.LESS_THAN);
+    public static final Token<Void> LESS_THAN_OR_EQUALS = voidToken(Type.LESS_THAN_OR_EQUALS);
+    public static final Token<Void> GREATER_THAN = voidToken(Type.GREATER_THAN);
+    public static final Token<Void> GREATER_THAN_OR_EQUALS = voidToken(Type.GREATER_THAN_OR_EQUALS);
 
     public static final Token<Void> PLUS = voidToken(Type.PLUS);
     public static final Token<Void> MINUS = voidToken(Type.MINUS);
