@@ -1,5 +1,7 @@
 package io.github.rodyamirov.tree;
 
+import io.github.rodyamirov.symbols.Scope;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -18,14 +20,16 @@ public final class IfStatementNode extends StatementNode {
     public final StatementNode thenStatement;
     public final Optional<StatementNode> elseStatement;
 
-    public IfStatementNode(ExpressionNode condition, StatementNode thenStatement) {
+    public IfStatementNode(Scope scope, ExpressionNode condition, StatementNode thenStatement) {
+        super(scope);
         this.condition = condition;
         this.thenStatement = thenStatement;
         this.elseStatement = Optional.empty();
     }
 
-    public IfStatementNode(ExpressionNode condition, StatementNode thenStatement,
+    public IfStatementNode(Scope scope, ExpressionNode condition, StatementNode thenStatement,
             StatementNode elseStatement) {
+        super(scope);
         this.condition = condition;
         this.thenStatement = thenStatement;
         this.elseStatement = Optional.of(elseStatement);
@@ -45,6 +49,7 @@ public final class IfStatementNode extends StatementNode {
         IfStatementNode other = (IfStatementNode)o;
         return Objects.equals(this.condition, other.condition)
                 && Objects.equals(this.thenStatement, other.thenStatement)
-                && Objects.equals(this.elseStatement, other.elseStatement);
+                && Objects.equals(this.elseStatement, other.elseStatement)
+                && Objects.equals(this.scope, other.scope);
     }
 }

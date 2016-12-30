@@ -1,8 +1,8 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
-import io.github.rodyamirov.symbols.TypeCheckException;
 import io.github.rodyamirov.symbols.TypeSpec;
 
 import java.util.Objects;
@@ -15,21 +15,14 @@ public final class IntConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.INTEGER;
 
-    public IntConstantNode(SymbolValue<Integer> value) {
-        if (value.typeSpec != DESIRED_TYPE) {
-            throw TypeCheckException.wrongValueClass(value.typeSpec, DESIRED_TYPE);
-        }
-
+    private IntConstantNode(Scope scope, SymbolValue<Integer> value) {
+        super(scope);
         this.value = value;
     }
 
-    public static IntConstantNode make(Token token) {
+    public static IntConstantNode make(Scope scope, Token token) {
         SymbolValue<Integer> sv = SymbolValue.make(DESIRED_TYPE, token.value);
-        return new IntConstantNode(sv);
-    }
-
-    public static IntConstantNode make(int value) {
-        return make(Token.INT_CONSTANT(value));
+        return new IntConstantNode(scope, sv);
     }
 
     @Override
@@ -45,6 +38,7 @@ public final class IntConstantNode extends TerminalExpressionNode {
 
         IntConstantNode other = (IntConstantNode)o;
 
-        return Objects.equals(this.value, other.value);
+        return Objects.equals(this.value, other.value)
+                && Objects.equals(this.scope, other.scope);
     }
 }

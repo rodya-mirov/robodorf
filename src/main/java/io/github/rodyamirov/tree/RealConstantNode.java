@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.TypeSpec;
 
@@ -14,17 +15,14 @@ public final class RealConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.REAL;
 
-    public RealConstantNode(SymbolValue<Float> value) {
+    private RealConstantNode(Scope scope, SymbolValue<Float> value) {
+        super(scope);
         this.value = value;
     }
 
-    public static RealConstantNode make(Token token) {
+    public static RealConstantNode make(Scope scope, Token token) {
         SymbolValue<Float> sv = SymbolValue.make(DESIRED_TYPE, token.value);
-        return new RealConstantNode(sv);
-    }
-
-    public static RealConstantNode make(float value) {
-        return make(Token.REAL_CONSTANT(value));
+        return new RealConstantNode(scope, sv);
     }
 
     @Override
@@ -40,6 +38,7 @@ public final class RealConstantNode extends TerminalExpressionNode {
 
         RealConstantNode other = (RealConstantNode)o;
 
-        return Objects.equals(this.value, other.value);
+        return Objects.equals(this.value, other.value)
+                && Objects.equals(this.scope, other.scope);
     }
 }

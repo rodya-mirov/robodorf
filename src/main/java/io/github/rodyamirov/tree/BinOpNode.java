@@ -3,7 +3,9 @@ package io.github.rodyamirov.tree;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
+import io.github.rodyamirov.symbols.SymbolValueOps;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -19,26 +21,28 @@ public final class BinOpNode extends ExpressionNode {
     // static it up
     private static final ImmutableMap<Token.Type, BiFunction<SymbolValue, SymbolValue, SymbolValue>> evaluations =
             ImmutableMap.<Token.Type, BiFunction<SymbolValue, SymbolValue, SymbolValue>>builder() // java 7 fail :(
-                    .put(Token.Type.PLUS, SymbolValue::add)
-                    .put(Token.Type.MINUS, SymbolValue::subtract)
-                    .put(Token.Type.TIMES, SymbolValue::multiply)
-                    .put(Token.Type.INT_DIVIDE, SymbolValue::intDivide)
-                    .put(Token.Type.REAL_DIVIDE, SymbolValue::realDivide)
-                    .put(Token.Type.MOD, SymbolValue::intMod)
+                    .put(Token.Type.PLUS, SymbolValueOps::add)
+                    .put(Token.Type.MINUS, SymbolValueOps::subtract)
+                    .put(Token.Type.TIMES, SymbolValueOps::multiply)
+                    .put(Token.Type.INT_DIVIDE, SymbolValueOps::intDivide)
+                    .put(Token.Type.REAL_DIVIDE, SymbolValueOps::realDivide)
+                    .put(Token.Type.MOD, SymbolValueOps::intMod)
 
-                    .put(Token.Type.AND, SymbolValue::and)
-                    .put(Token.Type.OR, SymbolValue::or)
+                    .put(Token.Type.AND, SymbolValueOps::and)
+                    .put(Token.Type.OR, SymbolValueOps::or)
 
-                    .put(Token.Type.LESS_THAN, SymbolValue::lessThan)
-                    .put(Token.Type.LESS_THAN_OR_EQUALS, SymbolValue::lessThanOrEquals)
-                    .put(Token.Type.GREATER_THAN, SymbolValue::greaterThan)
-                    .put(Token.Type.GREATER_THAN_OR_EQUALS, SymbolValue::greaterThanOrEquals)
-                    .put(Token.Type.EQUALS, SymbolValue::equalsValue)
-                    .put(Token.Type.NOT_EQUALS, SymbolValue::notEqualsValue)
+                    .put(Token.Type.LESS_THAN, SymbolValueOps::lessThan)
+                    .put(Token.Type.LESS_THAN_OR_EQUALS, SymbolValueOps::lessThanOrEquals)
+                    .put(Token.Type.GREATER_THAN, SymbolValueOps::greaterThan)
+                    .put(Token.Type.GREATER_THAN_OR_EQUALS, SymbolValueOps::greaterThanOrEquals)
+                    .put(Token.Type.EQUALS, SymbolValueOps::equalsValue)
+                    .put(Token.Type.NOT_EQUALS, SymbolValueOps::notEqualsValue)
                     .build();
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 
-    public BinOpNode(ExpressionNode left, ExpressionNode right, Token opToken) {
+    public BinOpNode(Scope scope, ExpressionNode left, ExpressionNode right, Token opToken) {
+        super(scope);
+
         if (left == null || right == null || opToken == null) {
             String message = "Both children must be non-null";
             throw new IllegalArgumentException(message);
@@ -72,6 +76,7 @@ public final class BinOpNode extends ExpressionNode {
 
         return Objects.equals(this.opToken, other.opToken)
                 && Objects.equals(this.left, other.left)
-                && Objects.equals(this.right, other.right);
+                && Objects.equals(this.right, other.right)
+                && Objects.equals(this.scope, other.scope);
     }
 }

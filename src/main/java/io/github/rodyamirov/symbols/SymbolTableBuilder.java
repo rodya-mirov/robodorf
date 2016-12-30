@@ -74,8 +74,11 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(VariableDeclarationNode variableDeclarationNode) {
+        Scope scope = variableDeclarationNode.scope;
+        TypeSpec typeSpec = variableDeclarationNode.varType;
+
         for (Token<String> id : variableDeclarationNode.variableIds) {
-            builder.addSymbol(id, variableDeclarationNode.varType);
+            builder.addSymbol(scope, id, typeSpec);
         }
     }
 

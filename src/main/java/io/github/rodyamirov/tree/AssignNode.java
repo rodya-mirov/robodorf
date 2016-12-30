@@ -1,5 +1,7 @@
 package io.github.rodyamirov.tree;
 
+import io.github.rodyamirov.symbols.Scope;
+
 import java.util.Objects;
 
 /**
@@ -9,7 +11,8 @@ public final class AssignNode extends StatementNode {
     public final VariableAssignNode variableAssignNode;
     public final ExpressionNode expressionNode;
 
-    public AssignNode(VariableAssignNode variableAssignNode, ExpressionNode expressionNode) {
+    public AssignNode(Scope scope, VariableAssignNode variableAssignNode, ExpressionNode expressionNode) {
+        super(scope);
         this.variableAssignNode = variableAssignNode;
         this.expressionNode = expressionNode;
     }
@@ -28,6 +31,7 @@ public final class AssignNode extends StatementNode {
         AssignNode other = (AssignNode)o;
 
         return Objects.equals(this.variableAssignNode, other.variableAssignNode)
-                && Objects.equals(this.expressionNode, other.expressionNode);
+                && Objects.equals(this.expressionNode, other.expressionNode)
+                && Objects.equals(this.scope, other.scope);
     }
 }

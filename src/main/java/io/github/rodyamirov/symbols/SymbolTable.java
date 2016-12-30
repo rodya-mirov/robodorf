@@ -1,5 +1,8 @@
 package io.github.rodyamirov.symbols;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import io.github.rodyamirov.exceptions.VariableException;
 import io.github.rodyamirov.lex.Token;
 
 import java.util.HashMap;
@@ -10,10 +13,19 @@ import java.util.Objects;
  * Created by richard.rast on 12/27/16.
  */
 public class SymbolTable {
-    private final Map<Token<String>, TypeSpec> symbolTable;
+    // lookup by scope, then look by token to see the registered type
+    private final ImmutableMap<Scope, Map<Token<String>, TypeSpec>> symbolTable;
 
-    private SymbolTable() {
-        symbolTable = new HashMap<>();
+    private SymbolTable(ImmutableMap<Scope, Map<Token<String>, TypeSpec>> symbolTable) {
+        this.symbolTable = symbolTable;
+    }
+
+    /**
+     * Returns the set of all scopes which are known to be in this SymbolTable.
+     * @return the set of all scopes which are known to be in this SymbolTable.
+     */
+    public ImmutableSet<Scope> knownScopes() {
+        return this.symbolTable.keySet();
     }
 
     @Override
@@ -27,19 +39,53 @@ public class SymbolTable {
     }
 
     public static SymbolTable empty() {
-        return new SymbolTable();
+        return new SymbolTable(ImmutableMap.of());
     }
 
-    public boolean isDefined(Token idToken) {
-        return symbolTable.containsKey(idToken);
-    }
-
-    public TypeSpec getType(Token idToken) {
-        if (symbolTable.containsKey(idToken)) {
-            return symbolTable.get(idToken);
+    /**
+     * Checks if there is a symbol defined by the specified token exactly at the specified
+     * scope. So for example if there is a variable x defined at scope a.b, then
+     * - isDefinedExactlyAt(a.b.c, x) would be false,
+     * - isDefinedExactlyAt(a.b, x) would be true, and
+     * - isDefinedExactlyAt(a, x) would be false.
+     *
+     * @param scope The exact scope to search at
+     * @param idToken The name of the symbol to search for
+     * @return True if there is a symbol by this name at or below the specified scope
+     */
+    public boolean isDefinedExactlyAt(Scope scope, Token idToken) {
+        if (! symbolTable.containsKey(scope)) {
+            return false;
         } else {
-            String message = String.format("Unrecognized variable token: %s", idToken.toString());
-            throw new VariableException(message);
+            Map<Token<String>, TypeSpec> localTable = symbolTable.get(scope);
+            return localTable.containsKey(idToken);
+        }
+    }
+
+    /**
+     * Gets the type of the uppermost symbol exactly at the specified scope. So for example,
+     * if there is a variable x:REAL at scope a and x:INTEGER at scope a.b (and nothing else
+     * in the entire table), then
+     * - getTypeExactlyAt(a.b.c, x) would be an exception,
+     * - getTypeExactlyAt(a.b, x) would be INTEGER,
+     * - getTypeExactlyAt(a, x) would be REAL, and
+     * - getTypeExactlyAt(d, x) would be an exception.
+     *
+     * @param scope The uppermost scope to search from
+     * @param idToken The name of the symbol to search for
+     * @return The TypeSpec of the uppermost symbol with this id, at the specified scope
+     * @throws VariableException if there is no symbol with this id at the specified scope
+     */
+    public TypeSpec getTypeExactlyAt(Scope scope, Token idToken) {
+        if (!symbolTable.containsKey(scope)) {
+            throw VariableException.notDefined(scope, idToken);
+        } else {
+            Map<Token<String>, TypeSpec> localTable = symbolTable.get(scope);
+            if (localTable.containsKey(idToken)) {
+                return localTable.get(idToken);
+            } else {
+                throw VariableException.notDefined(scope, idToken);
+            }
         }
     }
 
@@ -48,28 +94,43 @@ public class SymbolTable {
     }
 
     public static class Builder {
-        private final SymbolTable toReturn;
+        private final Map<Scope, Map<Token<String>, TypeSpec>> toReturn;
         private boolean finished;
 
         private Builder() {
-            toReturn = new SymbolTable();
+            toReturn = new HashMap<>();
             finished = false;
         }
 
         /**
          * Adds a specific token to the symbol table. Returns this for purpose of chaining.
          */
-        public Builder addSymbol(Token<String> idToken, TypeSpec variableType) {
-            toReturn.symbolTable.put(idToken, variableType);
+        public Builder addSymbol(Scope scope, Token<String> idToken, TypeSpec variableType) {
+            Map<Token<String>, TypeSpec> localTable;
+
+            if (! toReturn.containsKey(scope)) {
+                localTable = new HashMap<>();
+                toReturn.put(scope, localTable);
+            } else {
+                localTable = toReturn.get(scope);
+            }
+
+            localTable.put(idToken, variableType);
             return this;
         }
 
+        /**
+         * Builds the symbol table. To preserve immutability of the symbol table, this can only
+         * be built once or it will throw an exception.
+         *
+         * @return The SymbolTable this Builder has been building.
+         */
         public SymbolTable build() {
             if (finished) {
                 throw new IllegalStateException("Symbol table has already been built!");
             } else {
                 finished = true;
-                return toReturn;
+                return new SymbolTable(ImmutableMap.copyOf(toReturn));
             }
         }
     }

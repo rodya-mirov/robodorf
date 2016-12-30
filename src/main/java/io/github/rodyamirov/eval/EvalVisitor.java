@@ -160,7 +160,7 @@ public class EvalVisitor extends NodeVisitor {
         assignNode.expressionNode.acceptVisit(this);
         SymbolValue result = resultStack.pop();
 
-        globals.setValue(varToken, result);
+        globals.setValue(assignNode.scope, varToken, result);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class EvalVisitor extends NodeVisitor {
     @Override
     public void visit(VariableEvalNode variableEvalNode) {
         Token<String> varToken = variableEvalNode.idToken;
-        SymbolValue result = globals.getValue(varToken);
+        SymbolValue result = globals.getValue(variableEvalNode.scope, varToken);
 
         resultStack.push(result);
     }

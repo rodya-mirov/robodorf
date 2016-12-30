@@ -1,5 +1,7 @@
 package io.github.rodyamirov.tree;
 
+import io.github.rodyamirov.symbols.Scope;
+
 import java.util.Objects;
 
 /**
@@ -9,7 +11,8 @@ public final class BlockNode extends SyntaxTree {
     public final DeclarationNode declarationNode;;
     public final CompoundNode compoundNode;
 
-    public BlockNode(DeclarationNode declarationNode, CompoundNode compoundNode) {
+    public BlockNode(Scope scope, DeclarationNode declarationNode, CompoundNode compoundNode) {
+        super(scope);
         this.declarationNode = declarationNode;
         this.compoundNode = compoundNode;
     }
@@ -28,6 +31,7 @@ public final class BlockNode extends SyntaxTree {
         BlockNode other = (BlockNode)o;
 
         return Objects.equals(this.declarationNode, other.declarationNode)
-                && Objects.equals(this.compoundNode, other.compoundNode);
+                && Objects.equals(this.compoundNode, other.compoundNode)
+                && Objects.equals(this.scope, other.scope);
     }
 }

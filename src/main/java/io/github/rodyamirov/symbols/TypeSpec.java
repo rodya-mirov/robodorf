@@ -6,8 +6,28 @@ package io.github.rodyamirov.symbols;
 public enum TypeSpec {
     REAL, INTEGER, BOOLEAN;
 
+    public boolean acceptsNullValues() {
+        return acceptsNullValues(this);
+    }
+
     public Class getValueClass() {
         return getValueClass(this);
+    }
+
+    public static boolean acceptsNullValues(TypeSpec typeSpec) {
+        switch (typeSpec) {
+            case INTEGER:
+            case BOOLEAN:
+            case REAL:
+                return false;
+
+            default:
+                String errorMessage = String.format(
+                        "Unspecified behavior for TypeSpec %s",
+                        typeSpec.name()
+                );
+                throw new IllegalArgumentException(errorMessage);
+        }
     }
 
     public static Class getValueClass(TypeSpec typeSpec) {

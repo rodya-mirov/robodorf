@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.TypeSpec;
 
@@ -14,17 +15,14 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.BOOLEAN;
 
-    public BooleanConstantNode(SymbolValue<Boolean> value) {
+    private BooleanConstantNode(Scope scope, SymbolValue<Boolean> value) {
+        super(scope);
         this.value = value;
     }
 
-    public static BooleanConstantNode make(Token token) {
+    public static BooleanConstantNode make(Scope scope, Token token) {
         SymbolValue<Boolean> sv = SymbolValue.make(DESIRED_TYPE, token.value);
-        return new BooleanConstantNode(sv);
-    }
-
-    public static BooleanConstantNode make(boolean value) {
-        return make(Token.BOOLEAN_CONSTANT(value));
+        return new BooleanConstantNode(scope, sv);
     }
 
     @Override
@@ -40,6 +38,7 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
 
         BooleanConstantNode other = (BooleanConstantNode) o;
 
-        return Objects.equals(this.value, other.value);
+        return Objects.equals(this.value, other.value)
+                && Objects.equals(this.scope, other.scope);
     }
 }

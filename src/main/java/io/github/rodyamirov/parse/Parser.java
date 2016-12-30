@@ -3,6 +3,7 @@ package io.github.rodyamirov.parse;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.lex.Tokenizer;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
 import io.github.rodyamirov.tree.AssignNode;
@@ -34,12 +35,15 @@ import java.util.function.Function;
  * Created by richard.rast on 12/22/16.
  */
 public class Parser {
+    public static final Scope ROOT_SCOPE = Scope.makeRootScope(Token.ID("ROOT"));
     private final Tokenizer tokenizer;
     private Token currentToken;
+    private Scope currentScope;
 
     public Parser(String text) {
         this.tokenizer = new Tokenizer(text);
         currentToken = tokenizer.getNextToken();
+        currentScope = ROOT_SCOPE;
     }
 
     private Token eatStrict(Token.Type... types) {
@@ -94,6 +98,12 @@ public class Parser {
         return result;
     }
 
+    public static ExpressionNode parseExpression(Scope rootScope, String text) {
+        Parser parser = new Parser(text);
+        parser.currentScope = rootScope;
+        return parser.parseExpression();
+    }
+
     public static ExpressionNode parseExpression(String text) {
         Parser parser = new Parser(text);
         return parser.parseExpression();
@@ -115,13 +125,19 @@ public class Parser {
         // not sure if this is used anywhere?
         Token<String> programName = (Token<String>) eatStrict(Token.Type.ID);
 
+        // inside the program we're one level down (everything lives inside the program's scope)
+        Scope parentScope = currentScope;
+        currentScope = currentScope.makeChildScope(programName);
+
         eatStrict(Token.Type.SEMI);
 
         BlockNode block = block();
 
         eatStrict(Token.Type.DOT);
 
-        return new ProgramNode(programName, block);
+        currentScope = parentScope;
+
+        return new ProgramNode(currentScope, programName, block);
     }
 
     private BlockNode block() {
@@ -130,7 +146,7 @@ public class Parser {
 
         CompoundNode compoundNode = compoundStatement();
 
-        return new BlockNode(declarationNode, compoundNode);
+        return new BlockNode(currentScope, declarationNode, compoundNode);
     }
 
     private DeclarationNode declaration() {
@@ -148,14 +164,20 @@ public class Parser {
 
         while (eatNonstrict(Token.Type.PROCEDURE).isPresent()) {
             Token<String> procedureName = eatStrict(Token.Type.ID);
+
+            Scope parentScope = currentScope;
+            currentScope = currentScope.makeChildScope(procedureName);
+
             eatStrict(Token.Type.SEMI);
             BlockNode blockNode = block();
             eatStrict(Token.Type.SEMI);
 
-            procedures.add(new ProcedureDeclarationNode(procedureName, blockNode));
+            currentScope = parentScope;
+
+            procedures.add(new ProcedureDeclarationNode(currentScope, procedureName, blockNode));
         }
 
-        return new DeclarationNode(declarations, procedures);
+        return new DeclarationNode(currentScope, declarations, procedures);
     }
 
     private VariableDeclarationNode variableDeclaration() {
@@ -173,7 +195,7 @@ public class Parser {
 
         eatStrict(Token.Type.SEMI);
 
-        return new VariableDeclarationNode(ids, typeSpec);
+        return new VariableDeclarationNode(currentScope, ids, typeSpec);
     }
 
     private TypeSpec typeSpec() {
@@ -189,7 +211,7 @@ public class Parser {
 
         eatStrict(Token.Type.END);
 
-        return new CompoundNode(statements);
+        return new CompoundNode(currentScope, statements);
     }
 
     private List<StatementNode> statementList() {
@@ -230,9 +252,9 @@ public class Parser {
 
         if (eatNonstrict(Token.Type.ELSE).isPresent()) {
             StatementNode elseStatement = statement();
-            return new IfStatementNode(condition, thenStatement, elseStatement);
+            return new IfStatementNode(currentScope, condition, thenStatement, elseStatement);
         } else {
-            return new IfStatementNode(condition, thenStatement);
+            return new IfStatementNode(currentScope, condition, thenStatement);
         }
     }
 
@@ -242,22 +264,22 @@ public class Parser {
         eatStrict(Token.Type.ASSIGN);
         ExpressionNode right = expression();
 
-        return new AssignNode(var, right);
+        return new AssignNode(currentScope, var, right);
     }
 
     private VariableAssignNode variableDefinition() {
         Token id = eatStrict(Token.Type.ID);
-        return new VariableAssignNode(id);
+        return new VariableAssignNode(currentScope, id);
     }
 
     private VariableEvalNode variable() {
         // variable -> ID
         Token id = eatStrict(Token.Type.ID);
-        return new VariableEvalNode(id);
+        return new VariableEvalNode(currentScope, id);
     }
 
     private StatementNode empty() {
-        return new NoOpNode();
+        return new NoOpNode(currentScope);
     }
 
     private ExpressionNode expression() {
@@ -272,10 +294,10 @@ public class Parser {
             // it must be an AND-THEN (and likewise with OR-ELSE)
             if (eatNonstrict(Token.Type.AND).isPresent()) {
                 eatStrict(Token.Type.THEN);
-                out = new AndThenNode(out, compareExpression());
+                out = new AndThenNode(currentScope, out, compareExpression());
             } else if (eatNonstrict(Token.Type.OR).isPresent()) {
                 eatStrict(Token.Type.ELSE);
-                out = new OrElseNode(out, compareExpression());
+                out = new OrElseNode(currentScope, out, compareExpression());
             } else {
                 hasMore = false;
             }
@@ -301,7 +323,7 @@ public class Parser {
         Optional<Token> maybeOpToken;
         while ((maybeOpToken = eatNonstrict(compareTypes::contains)).isPresent()) {
             Token opToken = maybeOpToken.get();
-            out = new BinOpNode(out, additiveExpression(), opToken);
+            out = new BinOpNode(currentScope, out, additiveExpression(), opToken);
         }
 
         return out;
@@ -322,10 +344,10 @@ public class Parser {
             Optional<Token> maybeOpToken;
             if ((maybeOpToken = eatNonstrict(expressionTypes::contains)).isPresent()) {
                 Token opToken = maybeOpToken.get();
-                out = new BinOpNode(out, factor(), opToken);
+                out = new BinOpNode(currentScope, out, factor(), opToken);
             } else if (currentToken.equals(Token.OR) && ! tokenizer.peek().equals(Token.ELSE)) {
                 eatStrict(Token.Type.OR);
-                out = new BinOpNode(out, factor(), Token.OR);
+                out = new BinOpNode(currentScope, out, factor(), Token.OR);
             } else {
                 keepGoing = false;
             }
@@ -350,10 +372,10 @@ public class Parser {
             Optional<Token> maybeOpToken;
             if ((maybeOpToken = eatNonstrict(factorTypes::contains)).isPresent()) {
                 Token opToken = maybeOpToken.get();
-                out = new BinOpNode(out, unop(), opToken);
+                out = new BinOpNode(currentScope, out, unop(), opToken);
             } else if (currentToken.equals(Token.AND) && ! tokenizer.peek().equals(Token.THEN)) {
                 eatStrict(Token.Type.AND);
-                out = new BinOpNode(out, unop(), Token.AND);
+                out = new BinOpNode(currentScope, out, unop(), Token.AND);
             } else {
                 keepGoing = false;
             }
@@ -373,7 +395,7 @@ public class Parser {
         Optional<Token> maybeOpToken;
         if ((maybeOpToken = eatNonstrict(unopTypes::contains)).isPresent()) {
             Token opToken = maybeOpToken.get();
-            return new UnaryOpNode(unop(), opToken);
+            return new UnaryOpNode(currentScope, unop(), opToken);
         } else {
             return terminal();
         }
@@ -385,16 +407,16 @@ public class Parser {
         Optional<Token> maybeToken;
         if ((maybeToken = eatNonstrict(Token.Type.INTEGER_CONSTANT)).isPresent()) {
             Token intToken = maybeToken.get();
-            return IntConstantNode.make(intToken);
+            return IntConstantNode.make(currentScope, intToken);
         } else if ((maybeToken = eatNonstrict(Token.Type.REAL_CONSTANT)).isPresent()) {
             Token realToken = maybeToken.get();
-            return RealConstantNode.make(realToken);
+            return RealConstantNode.make(currentScope, realToken);
         } else if ((maybeToken = eatNonstrict(Token.Type.BOOLEAN_CONSTANT)).isPresent()) {
             Token boolToken = maybeToken.get();
-            return BooleanConstantNode.make(boolToken);
+            return BooleanConstantNode.make(currentScope, boolToken);
         } else if ((maybeToken = eatNonstrict(Token.Type.ID)).isPresent()) {
             Token variableToken = maybeToken.get();
-            return new VariableEvalNode(variableToken);
+            return new VariableEvalNode(currentScope, variableToken);
         } else {
             eatStrict(Token.Type.L_PAREN);
             ExpressionNode out = expression();
