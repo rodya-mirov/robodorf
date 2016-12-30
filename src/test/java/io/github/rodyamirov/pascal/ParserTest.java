@@ -9,6 +9,7 @@ import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
+import io.github.rodyamirov.pascal.tree.IfStatementNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
 import io.github.rodyamirov.pascal.tree.OrElseNode;
@@ -20,7 +21,9 @@ import io.github.rodyamirov.pascal.tree.UnaryOpNode;
 import io.github.rodyamirov.pascal.tree.VariableAssignNode;
 import io.github.rodyamirov.pascal.tree.VariableDeclarationNode;
 import io.github.rodyamirov.pascal.tree.VariableEvalNode;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +36,9 @@ import static org.hamcrest.core.Is.is;
  * Created by richard.rast on 12/25/16.
  */
 public class ParserTest {
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     private void doParseExpressionTest(String[] texts, SyntaxTree desired) {
         for (String text : texts) {
             Parser parser = new Parser(text);
@@ -529,6 +535,138 @@ public class ParserTest {
                 new VariableEvalNode(Token.ID("d"))
         );
         doParseExpressionTest(text, tree);
+    }
+
+    @Test
+    public void ifStatementTest1() {
+        ProgramNode programNode = new ProgramNode(Token.ID("testProg"), new BlockNode(
+                new DeclarationNode(list(), list()), // no declarations ...
+                new CompoundNode(list(
+                        new IfStatementNode(
+                                Parser.parseExpression("1<2"),
+                                new NoOpNode(),
+                                new IfStatementNode(
+                                        Parser.parseExpression("2<3"),
+                                        new NoOpNode(),
+                                        new IfStatementNode(
+                                                Parser.parseExpression("3<4"),
+                                                new NoOpNode(),
+                                                new NoOpNode()
+                                        )
+                                )
+                        )
+                ))
+        ));
+
+        String[] text = new String[] {
+                "program testProg {dnskdnsk};"
+                        + "begin "
+                        + "  if (1 < 2) then"
+                        + "     {nothing}"
+                        + "  else if (2 < 3) then"
+                        + "     {nothing!}"
+                        + "  else if (3 < 4) then"
+                        + "     {nothing!}"
+                        + "  else"
+                        + "     {nothing!}"
+                        + "end ."
+        };
+
+        doParseProgramTest(text, programNode);
+    }
+
+    @Test
+    public void ifStatementTest2() {
+        ProgramNode programNode = new ProgramNode(Token.ID("testProg"), new BlockNode(
+                new DeclarationNode(list(), list()), // no declarations ...
+                new CompoundNode(list(
+                        new IfStatementNode(
+                                Parser.parseExpression("1<2"),
+                                new NoOpNode(),
+                                new IfStatementNode(
+                                        Parser.parseExpression("2<3"),
+                                        new NoOpNode(),
+                                        new IfStatementNode(
+                                                Parser.parseExpression("3<4"),
+                                                new NoOpNode()
+                                        )
+                                )
+                        )
+                ))
+        ));
+
+        String[] text = new String[] {
+                "program testProg {dnskdnsk};"
+                        + "begin "
+                        + "  if (1 < 2) then"
+                        + "     {nothing}"
+                        + "  else if (2 < 3) then"
+                        + "     {nothing!}"
+                        + "  else if (3 < 4) then"
+                        + "     {nothing!}"
+                        + "end ."
+        };
+
+        doParseProgramTest(text, programNode);
+    }
+
+    @Test
+    public void ifStatementTest3() {
+        ProgramNode programNode = new ProgramNode(Token.ID("testProg"), new BlockNode(
+                new DeclarationNode(list(), list()), // no declarations ...
+                new CompoundNode(list(
+                        new IfStatementNode(
+                                Parser.parseExpression("1<2"),
+                                new IfStatementNode(
+                                        Parser.parseExpression("2<3"),
+                                        new NoOpNode(),
+                                        new NoOpNode()
+                                ),
+                                new NoOpNode()
+                        )
+                ))
+        ));
+
+        String[] text = new String[] {
+                "program testProg {dnskdnsk};"
+                        + "begin "
+                        + "  if (1 < 2) then"
+                        + "     if (2 < 3) then"
+                        + "         {nothing!}"
+                        + "     else "
+                        + "         {nothing!}"
+                        + "  else"
+                        + "     {nothing!}"
+                        + "end ."
+        };
+
+        doParseProgramTest(text, programNode);
+    }
+
+    @Test
+    public void ifStatementTest4() {
+        ProgramNode programNode = null; // parsing is gonna fail anyway
+
+        String[] text = new String[] {
+                "program testProg {dnskdnsk};"
+                        + "begin "
+                        + "  if (1 < 2) then"
+                        + "     if (2 < 3) then"
+                        + "         {nothing!}"
+                        + "     else "
+                        + "         {nothing!};" // <-- this fucks everything because Pascal hates you
+                        + "  else"
+                        + "     {nothing!}"
+                        + "end ."
+        };
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage(is(String.format("Cannot accept type %s", Token.Type.ELSE.name())));
+
+        doParseProgramTest(text, programNode);
+
+        // reset `thrown`
+        thrown = ExpectedException.none();
     }
 
     @Test
