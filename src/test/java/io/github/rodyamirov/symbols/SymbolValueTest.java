@@ -1,5 +1,6 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.utils.Procedure;
 import org.junit.Test;
 

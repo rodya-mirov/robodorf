@@ -1,5 +1,7 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
+
 /**
  * Created by richard.rast on 12/30/16.
  */

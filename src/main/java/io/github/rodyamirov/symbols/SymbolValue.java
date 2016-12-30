@@ -1,5 +1,7 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
+
 import java.util.Objects;
 
 /**

@@ -15,7 +15,7 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.BOOLEAN;
 
-    public BooleanConstantNode(Scope scope, SymbolValue<Boolean> value) {
+    private BooleanConstantNode(Scope scope, SymbolValue<Boolean> value) {
         super(scope);
         this.value = value;
     }

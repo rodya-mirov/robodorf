@@ -1,5 +1,7 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
+import io.github.rodyamirov.exceptions.VariableException;
 import io.github.rodyamirov.lex.Token;
 
 import java.util.HashMap;

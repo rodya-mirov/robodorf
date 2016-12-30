@@ -1,6 +1,11 @@
-package io.github.rodyamirov.symbols;
+package io.github.rodyamirov.exceptions;
+
+import io.github.rodyamirov.symbols.TypeSpec;
 
 /**
+ * A custom exception thrown when the interpreter needs an Symbol's value to be of one type, but it
+ * is of an incompatible type (or null).
+ *
  * Created by richard.rast on 12/27/16.
  */
 public class TypeCheckException extends IllegalStateException {

@@ -3,7 +3,6 @@ package io.github.rodyamirov.tree;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
-import io.github.rodyamirov.symbols.TypeCheckException;
 import io.github.rodyamirov.symbols.TypeSpec;
 
 import java.util.Objects;
@@ -16,12 +15,8 @@ public final class IntConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.INTEGER;
 
-    public IntConstantNode(Scope scope, SymbolValue<Integer> value) {
+    private IntConstantNode(Scope scope, SymbolValue<Integer> value) {
         super(scope);
-        if (value.typeSpec != DESIRED_TYPE) {
-            throw TypeCheckException.wrongValueClass(value.typeSpec, DESIRED_TYPE);
-        }
-
         this.value = value;
     }
 

@@ -15,7 +15,7 @@ public final class RealConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.REAL;
 
-    public RealConstantNode(Scope scope, SymbolValue<Float> value) {
+    private RealConstantNode(Scope scope, SymbolValue<Float> value) {
         super(scope);
         this.value = value;
     }

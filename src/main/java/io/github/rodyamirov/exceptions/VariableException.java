@@ -1,10 +1,11 @@
-package io.github.rodyamirov.symbols;
+package io.github.rodyamirov.exceptions;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 
 /**
  * Special error code indicating a problem has happened when parsing a variable name.
- * This would often be thrown when a variable's value is used before it is assigned!
+ * This would often be thrown when a variable's value is used before it is assigned.
  * Created by richard.rast on 12/25/16.
  */
 public class VariableException extends IllegalStateException {
