@@ -29,7 +29,13 @@ public class SymbolValue<T> {
     public static SymbolValue make(TypeSpec typeSpec, Object value) {
         Class desiredClass = typeSpec.getValueClass();
 
-        if (desiredClass.isInstance(value)) {
+        if (value == null) {
+            if (typeSpec.acceptsNullValues()){
+                return new SymbolValue(typeSpec, null);
+            } else {
+                throw TypeCheckException.nullNotAllowed(typeSpec);
+            }
+        } else if (desiredClass.isInstance(value)) {
             return new SymbolValue<>(typeSpec, desiredClass.cast(value));
         } else {
             throw TypeCheckException.wrongValueClass(value.getClass(), desiredClass);

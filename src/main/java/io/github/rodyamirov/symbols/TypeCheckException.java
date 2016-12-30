@@ -31,4 +31,12 @@ public class TypeCheckException extends IllegalStateException {
         );
         return new TypeCheckException(message);
     }
+
+    public static TypeCheckException nullNotAllowed(TypeSpec actual) {
+        String message = String.format(
+                "Cannot assign a value of null for type %s",
+                actual.name()
+        );
+        return new TypeCheckException(message);
+    }
 }
