@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.SymbolValue;
+import io.github.rodyamirov.symbols.SymbolValueOps;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -19,9 +20,9 @@ public final class UnaryOpNode extends ExpressionNode {
     // static it up
     private static final ImmutableMap<Token.Type, Function<SymbolValue, SymbolValue>> evaluations =
             ImmutableMap.of(
-                    Token.Type.PLUS, SymbolValue::pos,
-                    Token.Type.MINUS, SymbolValue::neg,
-                    Token.Type.NOT, SymbolValue::not
+                    Token.Type.PLUS, SymbolValueOps::pos,
+                    Token.Type.MINUS, SymbolValueOps::neg,
+                    Token.Type.NOT, SymbolValueOps::not
             );
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 

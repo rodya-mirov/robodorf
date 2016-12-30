@@ -52,7 +52,7 @@ public class SymbolValueTable {
         }
 
         TypeSpec desired = symbolTable.getType(idToken);
-        SymbolValue setValue = SymbolValue.convert(value, desired);
+        SymbolValue setValue = SymbolValueOps.convert(value, desired);
 
         values.put(idToken, setValue);
     }
