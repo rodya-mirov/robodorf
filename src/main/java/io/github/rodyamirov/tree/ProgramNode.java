@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 
 import java.util.Objects;
 
@@ -11,7 +12,8 @@ public final class ProgramNode extends SyntaxTree {
     public final Token<String> name;
     public final BlockNode blockNode;
 
-    public ProgramNode(Token<String> name, BlockNode blockNode) {
+    public ProgramNode(Scope scope, Token<String> name, BlockNode blockNode) {
+        super(scope);
         this.name = name;
         this.blockNode = blockNode;
     }
@@ -30,6 +32,7 @@ public final class ProgramNode extends SyntaxTree {
         ProgramNode other = (ProgramNode)o;
 
         return Objects.equals(this.name, other.name)
-                && Objects.equals(this.blockNode, other.blockNode);
+                && Objects.equals(this.blockNode, other.blockNode)
+                && Objects.equals(this.scope, other.scope);
     }
 }

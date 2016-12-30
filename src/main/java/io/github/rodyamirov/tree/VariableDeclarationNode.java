@@ -2,6 +2,7 @@ package io.github.rodyamirov.tree;
 
 import com.google.common.collect.ImmutableList;
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.TypeSpec;
 
 import java.util.List;
@@ -14,7 +15,8 @@ public final class VariableDeclarationNode extends SyntaxTree {
     public final ImmutableList<Token<String>> variableIds;
     public final TypeSpec varType;
 
-    public VariableDeclarationNode(List<Token<String>> variableIds, TypeSpec varType) {
+    public VariableDeclarationNode(Scope scope, List<Token<String>> variableIds, TypeSpec varType) {
+        super(scope);
         this.variableIds = ImmutableList.copyOf(variableIds);
         this.varType = varType;
     }
@@ -33,6 +35,7 @@ public final class VariableDeclarationNode extends SyntaxTree {
         VariableDeclarationNode other = (VariableDeclarationNode)o;
 
         return Objects.equals(this.variableIds, other.variableIds)
-                && Objects.equals(this.varType, other.varType);
+                && Objects.equals(this.varType, other.varType)
+                && Objects.equals(this.scope, other.scope);
     }
 }

@@ -1,5 +1,7 @@
 package io.github.rodyamirov.tree;
 
+import io.github.rodyamirov.symbols.Scope;
+
 import java.util.Objects;
 
 /**
@@ -8,7 +10,8 @@ import java.util.Objects;
 public final class AndThenNode extends ExpressionNode {
     public final ExpressionNode left, right;
 
-    public AndThenNode(ExpressionNode left, ExpressionNode right) {
+    public AndThenNode(Scope scope, ExpressionNode left, ExpressionNode right) {
+        super(scope);
         this.left = left;
         this.right = right;
     }
@@ -26,6 +29,7 @@ public final class AndThenNode extends ExpressionNode {
 
         AndThenNode other = (AndThenNode)o;
         return Objects.equals(this.left, other.left)
-                && Objects.equals(this.right, other.right);
+                && Objects.equals(this.right, other.right)
+                && Objects.equals(this.scope, other.scope);
     }
 }

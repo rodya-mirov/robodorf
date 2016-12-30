@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import com.google.common.collect.ImmutableList;
+import io.github.rodyamirov.symbols.Scope;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,7 +12,8 @@ import java.util.Objects;
 public final class CompoundNode extends StatementNode {
     public final ImmutableList<StatementNode> statements;
 
-    public CompoundNode(List<StatementNode> statements) {
+    public CompoundNode(Scope scope, List<StatementNode> statements) {
+        super(scope);
         this.statements = ImmutableList.copyOf(statements);
     }
 
@@ -28,6 +30,7 @@ public final class CompoundNode extends StatementNode {
 
         CompoundNode other = (CompoundNode)o;
 
-        return Objects.equals(this.statements, other.statements);
+        return Objects.equals(this.statements, other.statements)
+                && Objects.equals(this.scope, other.scope);
     }
 }

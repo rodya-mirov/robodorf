@@ -3,6 +3,7 @@ package io.github.rodyamirov.tree;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueOps;
 
@@ -39,7 +40,9 @@ public final class BinOpNode extends ExpressionNode {
                     .build();
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 
-    public BinOpNode(ExpressionNode left, ExpressionNode right, Token opToken) {
+    public BinOpNode(Scope scope, ExpressionNode left, ExpressionNode right, Token opToken) {
+        super(scope);
+
         if (left == null || right == null || opToken == null) {
             String message = "Both children must be non-null";
             throw new IllegalArgumentException(message);
@@ -73,6 +76,7 @@ public final class BinOpNode extends ExpressionNode {
 
         return Objects.equals(this.opToken, other.opToken)
                 && Objects.equals(this.left, other.left)
-                && Objects.equals(this.right, other.right);
+                && Objects.equals(this.right, other.right)
+                && Objects.equals(this.scope, other.scope);
     }
 }

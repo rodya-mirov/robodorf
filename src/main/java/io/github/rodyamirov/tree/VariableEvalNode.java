@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 
 import java.util.Objects;
 
@@ -11,7 +12,9 @@ public final class VariableEvalNode extends TerminalExpressionNode {
     public final Token idToken;
     public final String id;
 
-    public VariableEvalNode(Token idToken) {
+    public VariableEvalNode(Scope scope, Token idToken) {
+        super(scope);
+
         if (idToken == null || idToken.type != Token.Type.ID) {
             throw new IllegalArgumentException("idToken must be nonnull and of type ID");
         }
@@ -34,6 +37,7 @@ public final class VariableEvalNode extends TerminalExpressionNode {
         VariableEvalNode other = (VariableEvalNode)o;
 
         return Objects.equals(this.idToken, other.idToken)
-                && Objects.equals(this.id, other.id);
+                && Objects.equals(this.id, other.id)
+                && Objects.equals(this.scope, other.scope);
     }
 }

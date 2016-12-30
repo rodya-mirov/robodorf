@@ -1,5 +1,7 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.lex.Token;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,16 +10,19 @@ import java.util.Optional;
  */
 public final class Scope {
     public final Optional<Scope> parentScope;
-    public final String immediateScopeName;
+    public final Token<String> immediateScopeName;
 
-    public Scope(String immediateScopeName) {
-        this.parentScope = Optional.empty();
+    private Scope(Token<String> immediateScopeName, Optional<Scope> parentScope) {
         this.immediateScopeName = immediateScopeName;
+        this.parentScope = parentScope;
     }
 
-    public Scope(String immediateScopeName, Scope parent) {
-        this.parentScope = Optional.of(parent);
-        this.immediateScopeName = immediateScopeName;
+    public static Scope makeRootScope(Token<String> immediateScopeName) {
+        return new Scope(immediateScopeName, Optional.empty());
+    }
+
+    public Scope makeChildScope(Token<String> childScopeName) {
+        return new Scope(childScopeName, Optional.of(this));
     }
 
     @Override
@@ -46,7 +51,7 @@ public final class Scope {
             sb.append(".");
         });
 
-        sb.append(immediateScopeName);
+        sb.append(immediateScopeName.value);
 
         return sb.toString();
     }
