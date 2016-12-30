@@ -86,6 +86,8 @@ public class Token<T> {
         return new Token<>(Type.ID, value);
     }
 
+    // these are only used for keywords so it doesn't make sense to
+    // expose the method
     private static Token<Void> voidToken(Type type) {
         return new Token<>(type, null);
     }
@@ -97,6 +99,7 @@ public class Token<T> {
     public static final Token<Void> NOT = voidToken(Type.NOT);
     public static final Token<Void> THEN = voidToken(Type.THEN);
     public static final Token<Void> ELSE = voidToken(Type.ELSE);
+    public static final Token<Void> IF = voidToken(Type.IF);
 
     public static final Token<Void> EQUALS = voidToken(Type.EQUALS);
     public static final Token<Void> NOT_EQUALS = voidToken(Type.NOT_EQUALS);

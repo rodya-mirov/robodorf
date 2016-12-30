@@ -9,6 +9,7 @@ import io.github.rodyamirov.pascal.tree.BlockNode;
 import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
+import io.github.rodyamirov.pascal.tree.IfStatementNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
 import io.github.rodyamirov.pascal.tree.OrElseNode;
@@ -39,6 +40,13 @@ public class SymbolTableBuilder extends NodeVisitor {
     public void visit(ProgramNode programNode) {
         // just looks for variable declaration nodes ...
         programNode.blockNode.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(IfStatementNode ifStatementNode) {
+        ifStatementNode.condition.acceptVisit(this);
+        ifStatementNode.thenStatement.acceptVisit(this);
+        ifStatementNode.elseStatement.ifPresent(s -> s.acceptVisit(this));
     }
 
     @Override

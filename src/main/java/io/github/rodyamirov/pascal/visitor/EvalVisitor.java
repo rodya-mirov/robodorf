@@ -4,7 +4,6 @@ import io.github.rodyamirov.pascal.SymbolTable;
 import io.github.rodyamirov.pascal.SymbolValue;
 import io.github.rodyamirov.pascal.SymbolValueTable;
 import io.github.rodyamirov.pascal.Token;
-import io.github.rodyamirov.pascal.TypeSpec;
 import io.github.rodyamirov.pascal.tree.AndThenNode;
 import io.github.rodyamirov.pascal.tree.AssignNode;
 import io.github.rodyamirov.pascal.tree.BinOpNode;
@@ -13,6 +12,7 @@ import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
+import io.github.rodyamirov.pascal.tree.IfStatementNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
 import io.github.rodyamirov.pascal.tree.OrElseNode;
@@ -113,6 +113,18 @@ public class EvalVisitor extends NodeVisitor {
 
         for (ProcedureDeclarationNode pdn : declarationNode.procedureDeclarations) {
             pdn.acceptVisit(this);
+        }
+    }
+
+    @Override
+    public void visit(IfStatementNode ifStatementNode) {
+        ifStatementNode.condition.acceptVisit(this);
+        SymbolValue<Boolean> conditionResult = resultStack.pop();
+
+        if (conditionResult.value) {
+            ifStatementNode.thenStatement.acceptVisit(this);
+        } else {
+            ifStatementNode.elseStatement.ifPresent(s -> s.acceptVisit(this));
         }
     }
 

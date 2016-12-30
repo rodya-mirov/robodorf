@@ -9,6 +9,7 @@ import io.github.rodyamirov.pascal.tree.BooleanConstantNode;
 import io.github.rodyamirov.pascal.tree.CompoundNode;
 import io.github.rodyamirov.pascal.tree.DeclarationNode;
 import io.github.rodyamirov.pascal.tree.ExpressionNode;
+import io.github.rodyamirov.pascal.tree.IfStatementNode;
 import io.github.rodyamirov.pascal.tree.IntConstantNode;
 import io.github.rodyamirov.pascal.tree.NoOpNode;
 import io.github.rodyamirov.pascal.tree.OrElseNode;
@@ -76,6 +77,11 @@ public class Parser {
         }
     }
 
+    public static ProgramNode parseProgram(String text) {
+        Parser parser = new Parser(text);
+        return parser.parseProgram();
+    }
+
     public ProgramNode parseProgram() {
         ProgramNode result = program();
 
@@ -83,6 +89,11 @@ public class Parser {
         eatStrict(Token.Type.EOF);
 
         return result;
+    }
+
+    public static ExpressionNode parseExpression(String text) {
+        Parser parser = new Parser(text);
+        return parser.parseExpression();
     }
 
     public ExpressionNode parseExpression() {
@@ -192,14 +203,33 @@ public class Parser {
     }
 
     private StatementNode statement() {
-        // statement -> compoundStatement | assignmentStatement | empty
+        // statement -> compoundStatement | ifStatement | assignmentStatement | empty
         switch (currentToken.type) {
             case BEGIN:
                 return compoundStatement();
+            case IF:
+                return ifStatement();
             case ID:
                 return assignmentStatement();
             default:
                 return empty();
+        }
+    }
+
+    private IfStatementNode ifStatement() {
+        eatStrict(Token.Type.IF);
+
+        ExpressionNode condition = expression();
+
+        eatStrict(Token.Type.THEN);
+
+        StatementNode thenStatement = statement();
+
+        if (eatNonstrict(Token.Type.ELSE).isPresent()) {
+            StatementNode elseStatement = statement();
+            return new IfStatementNode(condition, thenStatement, elseStatement);
+        } else {
+            return new IfStatementNode(condition, thenStatement);
         }
     }
 

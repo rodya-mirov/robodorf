@@ -429,4 +429,130 @@ public class EvalVisitorTest {
 
         doProgramTest(prog, symbolValueTable);
     }
+
+    @Test
+    public void ifTest1() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program thisTest {it's so great};"
+                + "var a: boolean; b: integer;"
+                + "begin"
+                + " a := true; "
+                + " if a then"
+                + "     b := 12"
+                + " else"
+                + "     b := a " // <-- note this would be a type error if it were executed
+                + "end.";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
+
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+
+        doProgramTest(prog, symbolValueTable);
+    }
+
+    @Test
+    public void ifTest2() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program thisTest {it's so great};"
+                + "var a: boolean; b: integer;"
+                + "begin"
+                + " a := false; "
+                + " if a then"
+                + "     b := a " // <-- note this would be a type error if it were executed
+                + " else"
+                + "     b := 12"
+                + "end.";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
+
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+
+        doProgramTest(prog, symbolValueTable);
+    }
+
+    @Test
+    public void ifTest3() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program thisTest {it's so great};"
+                + "var a, a2: boolean; b: integer;"
+                + "begin"
+                + " a := -7 > 15; "
+                + " if a then"
+                + "     if a2 then" // <-- error, never executed
+                + "         b := 13"
+                + "     else"
+                + "         b := 14"
+                + " else"
+                + "     begin"
+                + "         a2 := 1 < 10;"
+                + "         if a2 then"
+                + "             b := 12"
+                + "         else"
+                + "             c := 1" // <-- also an error, never executed
+                + "     end {of the else block}"
+                + "end.";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("a2"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
+
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        symbolValueTable.setValue(Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+
+        doProgramTest(prog, symbolValueTable);
+    }
+
+    @Test
+    public void ifTest4() {
+        String prog;
+        SymbolTable symbolTable;
+        SymbolValueTable symbolValueTable;
+
+        prog = "program thisTest {it's so great};"
+                + "var a, a2: boolean; b: integer;"
+                + "begin"
+                + " a := -7 < 15; "
+                + " if a then"
+                + "     begin"
+                + "         a2 := 1 < 10;"
+                + "         if a2 then"
+                + "             b := 12"
+                + "         else"
+                + "             c := 1"
+                + "     end {of the if block}" // <-- also an error, never executed
+                + " else"
+                + "     if a2 then" // <-- error, never executed
+                + "         b := 13"
+                + "     else"
+                + "         b := 14"
+                + "end.";
+        symbolTable = SymbolTable.builder()
+                .addSymbol(Token.ID("a"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("a2"), TypeSpec.BOOLEAN)
+                .addSymbol(Token.ID("b"), TypeSpec.INTEGER).build();
+
+        symbolValueTable = new SymbolValueTable(symbolTable);
+        symbolValueTable.setValue(Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+
+        doProgramTest(prog, symbolValueTable);
+    }
 }

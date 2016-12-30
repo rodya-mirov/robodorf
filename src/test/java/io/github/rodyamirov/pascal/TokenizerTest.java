@@ -172,13 +172,14 @@ public class TokenizerTest {
 
     @Test
     public void mixedTest() {
-        String text = "\t12- 13+DIV+\n-/\t1- 5 mod AnD thEn or ELSE div true falsE FaLse TrUE F T";
+        String text = "\t12- 13+DIV+\n-/\t1- 5 If IF mod if _if AnD thEn or ELSE div true falsE FaLse TrUE F T";
         Token[] correct = new Token[] {
                 Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(13),
                 Token.PLUS, Token.INT_DIVIDE, Token.PLUS,
                 Token.MINUS, Token.REAL_DIVIDE, Token.INT_CONSTANT(1),
                 Token.MINUS, Token.INT_CONSTANT(5),
-                Token.MOD, Token.AND, Token.THEN, Token.OR, Token.ELSE,
+                Token.IF, Token.IF, Token.MOD, Token.IF, Token.ID("_if"),
+                Token.AND, Token.THEN, Token.OR, Token.ELSE,
                 Token.INT_DIVIDE, Token.TRUE, Token.FALSE, Token.FALSE,
                 Token.TRUE, Token.ID("F"), Token.ID("T"),
                 Token.EOF, Token.EOF, Token.EOF }; // and so on
