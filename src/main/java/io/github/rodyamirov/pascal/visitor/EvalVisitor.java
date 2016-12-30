@@ -118,7 +118,14 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(IfStatementNode ifStatementNode) {
-        throw TODOException.make();
+        ifStatementNode.condition.acceptVisit(this);
+        SymbolValue<Boolean> conditionResult = resultStack.pop();
+
+        if (conditionResult.value) {
+            ifStatementNode.thenStatement.acceptVisit(this);
+        } else {
+            ifStatementNode.elseStatement.ifPresent(s -> s.acceptVisit(this));
+        }
     }
 
     @Override

@@ -44,7 +44,9 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(IfStatementNode ifStatementNode) {
-        throw TODOException.make();
+        ifStatementNode.condition.acceptVisit(this);
+        ifStatementNode.thenStatement.acceptVisit(this);
+        ifStatementNode.elseStatement.ifPresent(s -> s.acceptVisit(this));
     }
 
     @Override
