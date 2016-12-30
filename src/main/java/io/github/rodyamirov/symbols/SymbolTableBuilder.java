@@ -21,7 +21,6 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
-import io.github.rodyamirov.utils.TODOException;
 
 /**
  * Created by richard.rast on 12/27/16.
@@ -39,7 +38,7 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(ProgramNode programNode) {
-        // just looks for variable declaration nodes ...
+        builder.addSymbol(programNode.scope, programNode.name, TypeSpec.PROGRAM);
         programNode.blockNode.acceptVisit(this);
     }
 
@@ -62,8 +61,9 @@ public class SymbolTableBuilder extends NodeVisitor {
     }
 
     @Override
-    public void visit(ProcedureDeclarationNode procedureDeclarationNode) {
-        throw TODOException.make();
+    public void visit(ProcedureDeclarationNode procDecNode) {
+        builder.addSymbol(procDecNode.scope, procDecNode.name, TypeSpec.PROCEDURE);
+        procDecNode.blockNode.acceptVisit(this);
     }
 
     @Override

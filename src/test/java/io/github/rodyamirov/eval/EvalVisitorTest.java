@@ -20,8 +20,7 @@ import static org.hamcrest.core.Is.is;
  */
 public class EvalVisitorTest {
     private void doExpressionTest(String toParse, SymbolTable symbolTable, SymbolValue desiredAnswer) {
-        Parser parser = new Parser(toParse);
-        ExpressionNode parseTree = parser.parseExpression();
+        ExpressionNode parseTree = Parser.parseExpression(ROOT_SCOPE, toParse);
         SymbolValue actualAnswer = EvalVisitor.evaluateExpression(parseTree, symbolTable);
         assertThat("Expression was correctly evaluated", actualAnswer, is(desiredAnswer));
     }
@@ -39,8 +38,7 @@ public class EvalVisitorTest {
     }
 
     private void doProgramTest(String toParse, SymbolValueTable desiredEndState) {
-        Parser parser = new Parser(toParse);
-        ProgramNode parseTree = parser.parseProgram();
+        ProgramNode parseTree = Parser.parseProgram(ROOT_SCOPE, toParse);
         SymbolValueTable actualEndState = EvalVisitor.evaluateProgram(parseTree);
         assertThat("State at the end was correct", actualEndState, is(desiredEndState));
     }
@@ -154,7 +152,8 @@ public class EvalVisitorTest {
         SymbolTable symbolTable;
         SymbolValueTable desired;
 
-        Scope progScope = ROOT_SCOPE.makeChildScope(Token.ID("test_1"));
+        Token<String> progname = Token.ID("test_1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progname);
 
         prog = "program test_1; "
                 + "var a: integer;"
@@ -162,13 +161,17 @@ public class EvalVisitorTest {
                 + " a := 1; "
                 + " end .";
         symbolTable = SymbolTable.builder()
-                .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progname, TypeSpec.PROGRAM)
+                .build();
 
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
+        desired.setValue(ROOT_SCOPE, progname, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("_te"));
+        progname = Token.ID("_te");
+        progScope = ROOT_SCOPE.makeChildScope(progname);
         prog = "program _te;"
                 + "var _ab, b: INTEGER;"
                 + "begin "
@@ -178,13 +181,17 @@ public class EvalVisitorTest {
 
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("_ab"), TypeSpec.INTEGER)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progname, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
+        desired.setValue(ROOT_SCOPE, progname, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("_3GBB"));
+        progname = Token.ID("_3GBB");
+        progScope = ROOT_SCOPE.makeChildScope(progname);
         prog = "program _3GBB;"
                 + "var int: INTEGER;"
                 + "begin\n"
@@ -192,9 +199,12 @@ public class EvalVisitorTest {
                 + "int := int-2 "
                 + "end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(progScope, Token.ID("int"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("int"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progname, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
+        desired.setValue(ROOT_SCOPE, progname, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
     }
 
@@ -211,9 +221,13 @@ public class EvalVisitorTest {
                 + "begin ;;;"
                 + "; a := 1 ;"
                 + "; end .";
-        symbolTable = SymbolTable.builder().addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER).build();
+        symbolTable = SymbolTable.builder()
+                .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, Token.ID("NAME"), TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
+        desired.setValue(ROOT_SCOPE, Token.ID("NAME"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
         progScope = ROOT_SCOPE.makeChildScope(Token.ID("DEP"));
@@ -225,10 +239,13 @@ public class EvalVisitorTest {
                 + "end.";
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("_ab"), TypeSpec.INTEGER)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, Token.ID("DEP"), TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
+        desired.setValue(ROOT_SCOPE, Token.ID("DEP"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
         progScope = ROOT_SCOPE.makeChildScope(Token.ID("S_"));
@@ -239,9 +256,12 @@ public class EvalVisitorTest {
                 + " ;int := int-2 ;"
                 + "  ;; ;;  end.";
         symbolTable = SymbolTable.builder()
-                .addSymbol(progScope, Token.ID("int"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("int"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, Token.ID("S_"), TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
+        desired.setValue(ROOT_SCOPE, Token.ID("S_"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
     }
 
@@ -251,32 +271,44 @@ public class EvalVisitorTest {
         SymbolTable symbolTable;
         SymbolValueTable desired;
         Scope progScope;
+        Token<String> progName;
 
+        progName = Token.ID("t1");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program t1; "
                 + "Begin end.";
-        symbolTable = SymbolTable.empty();
+        symbolTable = SymbolTable.builder().addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM).build();
         desired = new SymbolValueTable(symbolTable);
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
+        progName = Token.ID("t1");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program t1; "
                 + "Begin end.";
-        symbolTable = SymbolTable.empty();
+        symbolTable = SymbolTable.builder().addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM).build();
         desired = new SymbolValueTable(symbolTable);
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("t2"));
+        progName = Token.ID("t2");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program t2; "
                 + "var a, b: integer; "
                 + "Begin a := 2; begin a := 3; b := a-1; end; b := a+b; end.";
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 5));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("t3"));
+        progName = Token.ID("t3");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program t3; "
                 + "var a, b, c, d: Integer; "
                 + "begin begin begin a:=1; b:=a-1; end; c := a-b; d := a*b-c*a+a*a*a end; end.";
@@ -284,12 +316,15 @@ public class EvalVisitorTest {
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER)
                 .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
                 .addSymbol(progScope, Token.ID("c"), TypeSpec.INTEGER)
-                .addSymbol(progScope, Token.ID("d"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("d"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 0));
         desired.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 1));
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.INTEGER, 0));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
         doProgramTest(prog, desired);
     }
 
@@ -300,7 +335,8 @@ public class EvalVisitorTest {
         SymbolValueTable desired;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("test1"));
+        Token<String> progName = Token.ID("test1");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program test1;"
                 + "var a, b: Integer;"
                 + "c, d: Real;"
@@ -309,12 +345,15 @@ public class EvalVisitorTest {
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.INTEGER)
                 .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
                 .addSymbol(progScope, Token.ID("c"), TypeSpec.REAL)
-                .addSymbol(progScope, Token.ID("d"), TypeSpec.REAL).build();
+                .addSymbol(progScope, Token.ID("d"), TypeSpec.REAL)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 2));
         desired.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.REAL, 3.0f));
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 4.0f));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, desired);
     }
@@ -326,7 +365,8 @@ public class EvalVisitorTest {
         SymbolValueTable desired;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("test2"));
+        Token<String> progName = Token.ID("test2");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program test2;"
                 + "var a, b: Real;"
                 + "begin {test2}"
@@ -334,10 +374,13 @@ public class EvalVisitorTest {
                 + "end.";
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.REAL)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.REAL).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.REAL)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 1.25f));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4*1.25f*1.25f+4));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, desired);
     }
@@ -349,7 +392,9 @@ public class EvalVisitorTest {
         SymbolValueTable desired;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("testBo"));
+        Token<String> progName = Token.ID("testBo");
+
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program testBo;"
                 + "var a, b, c, d, e, f: BooleaN;"
                 + "begin { the program }"
@@ -363,7 +408,9 @@ public class EvalVisitorTest {
                 .addSymbol(progScope, Token.ID("c"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("d"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("e"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("f"), TypeSpec.BOOLEAN).build();
+                .addSymbol(progScope, Token.ID("f"), TypeSpec.BOOLEAN)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         desired = new SymbolValueTable(symbolTable);
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.BOOLEAN, true));
@@ -371,6 +418,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("e"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, desired);
     }
@@ -382,7 +430,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("idk"));
+        Token<String> progName = Token.ID("idk");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program idk {whatever};"
                 + "var a, b: real; c, d: integer; e, f, g, h: boolean;"
                 + "begin {my thing!}"
@@ -401,7 +450,9 @@ public class EvalVisitorTest {
                 .addSymbol(progScope, Token.ID("e"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("f"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("g"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("h"), TypeSpec.BOOLEAN).build();
+                .addSymbol(progScope, Token.ID("h"), TypeSpec.BOOLEAN)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 2.0f));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 3.1f));
@@ -411,6 +462,7 @@ public class EvalVisitorTest {
         symbolValueTable.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         symbolValueTable.setValue(progScope, Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         symbolValueTable.setValue(progScope, Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }
@@ -422,7 +474,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("idk3"));
+        Token<String> progName = Token.ID("idk3");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program idk3 {whatever};"
                 + "var a, b: real; c, d: integer; e, f, g, h: boolean;"
                 + "begin {my thing!}"
@@ -441,7 +494,9 @@ public class EvalVisitorTest {
                 .addSymbol(progScope, Token.ID("e"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("f"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("g"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("h"), TypeSpec.BOOLEAN).build();
+                .addSymbol(progScope, Token.ID("h"), TypeSpec.BOOLEAN)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 2.0f));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 3.1f));
@@ -452,6 +507,7 @@ public class EvalVisitorTest {
         symbolValueTable.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         symbolValueTable.setValue(progScope, Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         symbolValueTable.setValue(progScope, Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }
@@ -463,7 +519,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("thisTest"));
+        Token<String> progName = Token.ID("thisTest");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program thisTest {it's so great};"
                 + "var a: boolean; b: integer;"
                 + "begin"
@@ -475,11 +532,14 @@ public class EvalVisitorTest {
                 + "end.";
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
 
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }
@@ -491,7 +551,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("thisTest"));
+        Token<String> progName = Token.ID("thisTest");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program thisTest {it's so great};"
                 + "var a: boolean; b: integer;"
                 + "begin"
@@ -503,11 +564,14 @@ public class EvalVisitorTest {
                 + "end.";
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
 
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }
@@ -519,7 +583,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("thisTest"));
+        Token<String> progName = Token.ID("thisTest");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program thisTest {it's so great};"
                 + "var a, a2: boolean; b: integer;"
                 + "begin"
@@ -541,12 +606,15 @@ public class EvalVisitorTest {
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("a2"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
 
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         symbolValueTable.setValue(progScope, Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }
@@ -558,7 +626,8 @@ public class EvalVisitorTest {
         SymbolValueTable symbolValueTable;
         Scope progScope;
 
-        progScope = ROOT_SCOPE.makeChildScope(Token.ID("thisTest"));
+        Token<String> progName = Token.ID("thisTest");
+        progScope = ROOT_SCOPE.makeChildScope(progName);
         prog = "program thisTest {it's so great};"
                 + "var a, a2: boolean; b: integer;"
                 + "begin"
@@ -580,12 +649,15 @@ public class EvalVisitorTest {
         symbolTable = SymbolTable.builder()
                 .addSymbol(progScope, Token.ID("a"), TypeSpec.BOOLEAN)
                 .addSymbol(progScope, Token.ID("a2"), TypeSpec.BOOLEAN)
-                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER).build();
+                .addSymbol(progScope, Token.ID("b"), TypeSpec.INTEGER)
+                .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)
+                .build();
 
         symbolValueTable = new SymbolValueTable(symbolTable);
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         symbolValueTable.setValue(progScope, Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, symbolValueTable);
     }

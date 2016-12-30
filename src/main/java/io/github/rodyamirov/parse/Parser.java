@@ -84,37 +84,31 @@ public class Parser {
         }
     }
 
-    public static ProgramNode parseProgram(String text) {
+    public static ProgramNode parseProgram(Scope rootScope, String text) {
         Parser parser = new Parser(text);
-        return parser.parseProgram();
+        parser.currentScope = rootScope;
+        ProgramNode programNode = parser.program();
+        parser.eatStrict(Token.Type.EOF);
+        return programNode;
     }
 
-    public ProgramNode parseProgram() {
-        ProgramNode result = program();
+    public static ProgramNode parseProgram(String text) {
+        return parseProgram(ROOT_SCOPE, text);
+    }
 
-        // just an assertion that we completed the text!
-        eatStrict(Token.Type.EOF);
-
-        return result;
+    public static ProcedureDeclarationNode parseProcedure(Scope rootScope, String text) {
+        Parser parser = new Parser(text);
+        parser.currentScope = rootScope;
+        ProcedureDeclarationNode out = parser.procedureDeclaration();
+        parser.eatStrict(Token.Type.EOF);
+        return out;
     }
 
     public static ExpressionNode parseExpression(Scope rootScope, String text) {
         Parser parser = new Parser(text);
         parser.currentScope = rootScope;
-        return parser.parseExpression();
-    }
-
-    public static ExpressionNode parseExpression(String text) {
-        Parser parser = new Parser(text);
-        return parser.parseExpression();
-    }
-
-    public ExpressionNode parseExpression() {
-        ExpressionNode result = expression();
-
-        // just an assertion that we completed the text!
-        eatStrict(Token.Type.EOF);
-
+        ExpressionNode result = parser.expression();
+        parser.eatStrict(Token.Type.EOF);
         return result;
     }
 
@@ -162,25 +156,31 @@ public class Parser {
 
         List<ProcedureDeclarationNode> procedures = new ArrayList<>();
 
-        while (eatNonstrict(Token.Type.PROCEDURE).isPresent()) {
-            Token<String> procedureName = eatStrict(Token.Type.ID);
-
-            Scope parentScope = currentScope;
-            currentScope = currentScope.makeChildScope(procedureName);
-
-            eatStrict(Token.Type.SEMI);
-            BlockNode blockNode = block();
-            eatStrict(Token.Type.SEMI);
-
-            currentScope = parentScope;
-
-            procedures.add(new ProcedureDeclarationNode(currentScope, procedureName, blockNode));
+        while (currentToken.type == Token.Type.PROCEDURE) {
+            procedures.add(procedureDeclaration());
         }
 
         return new DeclarationNode(currentScope, declarations, procedures);
     }
 
+    private ProcedureDeclarationNode procedureDeclaration() {
+        eatStrict(Token.Type.PROCEDURE);
+        Token<String> procedureName = eatStrict(Token.Type.ID);
+
+        Scope parentScope = currentScope;
+        currentScope = currentScope.makeChildScope(procedureName);
+
+        eatStrict(Token.Type.SEMI);
+        BlockNode blockNode = block();
+        eatStrict(Token.Type.SEMI);
+
+        currentScope = parentScope;
+
+        return new ProcedureDeclarationNode(currentScope, procedureName, blockNode);
+    }
+
     private VariableDeclarationNode variableDeclaration() {
+        // note that VAR is consumed elsewhere so we don't check it here
         List<Token<String>> ids = new ArrayList<>();
 
         ids.add(eatStrict(Token.Type.ID));

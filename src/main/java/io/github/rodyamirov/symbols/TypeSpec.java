@@ -1,10 +1,15 @@
 package io.github.rodyamirov.symbols;
 
+import io.github.rodyamirov.tree.ProcedureDeclarationNode;
+import io.github.rodyamirov.tree.ProgramNode;
+
 /**
  * Created by richard.rast on 12/26/16.
  */
 public enum TypeSpec {
-    REAL, INTEGER, BOOLEAN;
+    REAL, INTEGER, BOOLEAN, // datatypes
+
+    PROGRAM, PROCEDURE;     // the words get reserved but they don't mean the same as they used to
 
     public boolean acceptsNullValues() {
         return acceptsNullValues(this);
@@ -19,6 +24,8 @@ public enum TypeSpec {
             case INTEGER:
             case BOOLEAN:
             case REAL:
+            case PROCEDURE:
+            case PROGRAM:
                 return false;
 
             default:
@@ -35,6 +42,9 @@ public enum TypeSpec {
             case INTEGER: return Integer.class;
             case REAL: return Float.class;
             case BOOLEAN: return Boolean.class;
+
+            case PROCEDURE: return ProcedureDeclarationNode.class;
+            case PROGRAM: return ProgramNode.class;
 
             default:
                 String errorMessage = String.format(

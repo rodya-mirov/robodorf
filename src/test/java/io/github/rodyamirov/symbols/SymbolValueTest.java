@@ -1,9 +1,17 @@
 package io.github.rodyamirov.symbols;
 
 import io.github.rodyamirov.exceptions.TypeCheckException;
+import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.tree.BlockNode;
+import io.github.rodyamirov.tree.CompoundNode;
+import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.ProcedureDeclarationNode;
+import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.utils.Procedure;
 import org.junit.Test;
 
+import static io.github.rodyamirov.parse.Parser.ROOT_SCOPE;
+import static io.github.rodyamirov.utils.ListHelper.list;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.Is.isA;
@@ -24,7 +32,7 @@ public class SymbolValueTest {
     }
 
     @Test
-    public void symbolValueTest1() {
+    public void boolTest() {
         TypeSpec typeSpec;
         SymbolValue symbolValue, symbolValue2;
 
@@ -68,7 +76,7 @@ public class SymbolValueTest {
     }
 
     @Test
-    public void symbolValueTest2() {
+    public void intTest() {
         TypeSpec typeSpec;
         SymbolValue symbolValue, symbolValue2;
 
@@ -112,7 +120,7 @@ public class SymbolValueTest {
     }
 
     @Test
-    public void symbolValueTest3() {
+    public void realTest() {
         TypeSpec typeSpec;
         SymbolValue symbolValue, symbolValue2;
 
@@ -152,6 +160,146 @@ public class SymbolValueTest {
                 () -> SymbolValue.make(TypeSpec.INTEGER, 1317.0f),
                 TypeCheckException.class,
                 "Attempted to assign a value of type class java.lang.Float, but required a value of type class java.lang.Integer"
+        );
+    }
+
+    @Test
+    public void programTest() {
+        TypeSpec typeSpec = TypeSpec.PROGRAM;
+        Token<String> programName = Token.ID("program1");
+        Scope programScope = ROOT_SCOPE.makeChildScope(programName);
+
+        Token<String> programName3 = Token.ID("program3");
+        Scope programScope3 = ROOT_SCOPE.makeChildScope(programName3);
+
+        ProgramNode programNode1 = new ProgramNode(
+                ROOT_SCOPE, programName,
+                new BlockNode(
+                        programScope,
+                        new DeclarationNode(programScope, list(), list()),
+                        new CompoundNode(programScope, list())
+                )
+        );
+
+        ProgramNode programNode2 = new ProgramNode(
+                ROOT_SCOPE, programName,
+                new BlockNode(
+                        programScope,
+                        new DeclarationNode(programScope, list(), list()),
+                        new CompoundNode(programScope, list())
+                )
+        );
+
+        ProgramNode programNode3 = new ProgramNode(
+                ROOT_SCOPE, programName3,
+                new BlockNode(
+                        programScope3,
+                        new DeclarationNode(programScope3, list(), list()),
+                        new CompoundNode(programScope3, list())
+                )
+        );
+
+        SymbolValue symbolValue, symbolValue2;
+
+        symbolValue = SymbolValue.make(typeSpec, programNode1);
+        assertThat(symbolValue.typeSpec, is(typeSpec));
+        assertThat(symbolValue.value, is(programNode1));
+
+        symbolValue2 = SymbolValue.make(typeSpec, programNode2);
+        assertThat("Equals works", symbolValue, is(symbolValue2));
+        symbolValue2 = SymbolValue.make(typeSpec, programNode3);
+        assertThat("Equals works", symbolValue, is(not(symbolValue2)));
+
+        symbolValue = SymbolValue.make(typeSpec, programNode3);
+        assertThat(symbolValue.typeSpec, is(typeSpec));
+        assertThat(symbolValue.value, is(programNode3));
+
+        checkException(
+                () -> SymbolValue.make(typeSpec, null),
+                TypeCheckException.class,
+                "Cannot assign a value of null for type PROGRAM"
+        );
+
+        checkException(
+                () -> SymbolValue.make(TypeSpec.REAL, programNode2),
+                TypeCheckException.class,
+                "Attempted to assign a value of type class io.github.rodyamirov.tree.ProgramNode, but required a value of type class java.lang.Float"
+        );
+
+        checkException(
+                () -> SymbolValue.make(TypeSpec.PROGRAM, 1317.0f),
+                TypeCheckException.class,
+                "Attempted to assign a value of type class java.lang.Float, but required a value of type class io.github.rodyamirov.tree.ProgramNode"
+        );
+    }
+
+    @Test
+    public void procedureTest() {
+        TypeSpec typeSpec = TypeSpec.PROCEDURE;
+        Token<String> procedureName = Token.ID("program1");
+        Scope procedureScope = ROOT_SCOPE.makeChildScope(procedureName);
+
+        Token<String> procedureName3 = Token.ID("program3");
+        Scope procedureScope3 = ROOT_SCOPE.makeChildScope(procedureName3);
+
+        ProcedureDeclarationNode proc1 = new ProcedureDeclarationNode(
+                ROOT_SCOPE, procedureName,
+                new BlockNode(
+                        procedureScope,
+                        new DeclarationNode(procedureScope, list(), list()),
+                        new CompoundNode(procedureScope, list())
+                )
+        );
+
+        ProcedureDeclarationNode proc2 = new ProcedureDeclarationNode(
+                ROOT_SCOPE, procedureName,
+                new BlockNode(
+                        procedureScope,
+                        new DeclarationNode(procedureScope, list(), list()),
+                        new CompoundNode(procedureScope, list())
+                )
+        );
+
+        ProcedureDeclarationNode proc3 = new ProcedureDeclarationNode(
+                ROOT_SCOPE, procedureName3,
+                new BlockNode(
+                        procedureScope3,
+                        new DeclarationNode(procedureScope3, list(), list()),
+                        new CompoundNode(procedureScope3, list())
+                )
+        );
+
+        SymbolValue symbolValue, symbolValue2;
+
+        symbolValue = SymbolValue.make(typeSpec, proc1);
+        assertThat(symbolValue.typeSpec, is(typeSpec));
+        assertThat(symbolValue.value, is(proc1));
+
+        symbolValue2 = SymbolValue.make(typeSpec, proc2);
+        assertThat("Equals works", symbolValue, is(symbolValue2));
+        symbolValue2 = SymbolValue.make(typeSpec, proc3);
+        assertThat("Equals works", symbolValue, is(not(symbolValue2)));
+
+        symbolValue = SymbolValue.make(typeSpec, proc3);
+        assertThat(symbolValue.typeSpec, is(typeSpec));
+        assertThat(symbolValue.value, is(proc3));
+
+        checkException(
+                () -> SymbolValue.make(typeSpec, null),
+                TypeCheckException.class,
+                "Cannot assign a value of null for type PROCEDURE"
+        );
+
+        checkException(
+                () -> SymbolValue.make(TypeSpec.REAL, proc2),
+                TypeCheckException.class,
+                "Attempted to assign a value of type class io.github.rodyamirov.tree.ProcedureDeclarationNode, but required a value of type class java.lang.Float"
+        );
+
+        checkException(
+                () -> SymbolValue.make(TypeSpec.PROCEDURE, 1317.0f),
+                TypeCheckException.class,
+                "Attempted to assign a value of type class java.lang.Float, but required a value of type class io.github.rodyamirov.tree.ProcedureDeclarationNode"
         );
     }
 }

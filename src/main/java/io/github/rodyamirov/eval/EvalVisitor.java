@@ -5,6 +5,7 @@ import io.github.rodyamirov.symbols.SymbolTable;
 import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
+import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
 import io.github.rodyamirov.tree.AssignNode;
 import io.github.rodyamirov.tree.BinOpNode;
@@ -26,7 +27,6 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
-import io.github.rodyamirov.utils.TODOException;
 
 import java.util.Stack;
 
@@ -47,14 +47,14 @@ public class EvalVisitor extends NodeVisitor {
 
         EvalVisitor visitor = new EvalVisitor(symbolTable);
         programNode.acceptVisit(visitor);
-        return visitor.globals;
+        return visitor.symbolValueTable;
     }
 
     private final Stack<SymbolValue> resultStack = new Stack<>();
-    private final SymbolValueTable globals;
+    private final SymbolValueTable symbolValueTable;
 
     private EvalVisitor(SymbolTable globalDeclarations) {
-        globals = new SymbolValueTable(globalDeclarations);
+        symbolValueTable = new SymbolValueTable(globalDeclarations);
     }
 
     @Override
@@ -64,7 +64,12 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(ProgramNode programNode) {
-        // TODO: use the programNode.name to make scopes
+        symbolValueTable.setValue(
+                programNode.scope,
+                programNode.name,
+                SymbolValue.make(TypeSpec.PROGRAM, programNode)
+        );
+
         programNode.blockNode.acceptVisit(this);
     }
 
@@ -133,7 +138,11 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(ProcedureDeclarationNode procedureDeclarationNode) {
-        throw TODOException.make();
+        symbolValueTable.setValue(
+                procedureDeclarationNode.scope,
+                procedureDeclarationNode.name,
+                SymbolValue.make(TypeSpec.PROCEDURE, procedureDeclarationNode)
+        );
     }
 
     @Override
@@ -160,7 +169,7 @@ public class EvalVisitor extends NodeVisitor {
         assignNode.expressionNode.acceptVisit(this);
         SymbolValue result = resultStack.pop();
 
-        globals.setValue(assignNode.scope, varToken, result);
+        symbolValueTable.setValue(assignNode.scope, varToken, result);
     }
 
     @Override
@@ -171,7 +180,7 @@ public class EvalVisitor extends NodeVisitor {
     @Override
     public void visit(VariableEvalNode variableEvalNode) {
         Token<String> varToken = variableEvalNode.idToken;
-        SymbolValue result = globals.getValue(variableEvalNode.scope, varToken);
+        SymbolValue result = symbolValueTable.getValue(variableEvalNode.scope, varToken);
 
         resultStack.push(result);
     }
@@ -198,7 +207,7 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(NoOpNode noOpNode) {
-        // it's a No Op
+        // it'symbolValueTable a No Op
         // that means _no_ _operations_
     }
 

@@ -88,17 +88,14 @@ public class ParserTest {
 
     private void doParseExpressionTest(String[] texts, SyntaxTree desired) {
         for (String text : texts) {
-            Parser parser = new Parser(text);
-            SyntaxTree actual = parser.parseExpression();
-
+            ExpressionNode actual = Parser.parseExpression(ROOT_SCOPE, text);
             assertThat("Got the correct expression tree", actual, is(desired));
         }
     }
 
     private void doParseProgramTest(String[] texts, SyntaxTree desired) {
         for (String text : texts) {
-            Parser parser = new Parser(text);
-            SyntaxTree actual = parser.parseProgram();
+            ProgramNode actual = Parser.parseProgram(ROOT_SCOPE, text);
             assertThat("Got the correct parse tree", actual, is(desired));
         }
     }
