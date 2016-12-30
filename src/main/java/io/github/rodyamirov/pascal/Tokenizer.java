@@ -32,6 +32,7 @@ public class Tokenizer {
         reservedWordsMap.put(standardizeId("OR"), Token.OR);
         reservedWordsMap.put(standardizeId("ELSE"), Token.ELSE);
         reservedWordsMap.put(standardizeId("NOT"), Token.NOT);
+        reservedWordsMap.put(standardizeId("IF"), Token.IF);
 
         reservedWordsMap.put(standardizeId("DIV"), Token.INT_DIVIDE);
         reservedWordsMap.put(standardizeId("MOD"), Token.MOD);
