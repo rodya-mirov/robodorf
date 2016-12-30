@@ -1,6 +1,7 @@
 package io.github.rodyamirov.parse;
 
 import com.google.common.collect.ImmutableSet;
+import io.github.rodyamirov.exceptions.UnexpectedTokenException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.lex.Tokenizer;
 import io.github.rodyamirov.symbols.Scope;
@@ -17,6 +18,7 @@ import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -69,8 +71,7 @@ public class Parser {
             currentToken = tokenizer.getNextToken();
             return out;
         } else {
-            String message = String.format("Cannot accept type %s", currentToken.type);
-            throw new IllegalStateException(message);
+            throw UnexpectedTokenException.wrongType(currentToken.type);
         }
     }
 
@@ -235,10 +236,30 @@ public class Parser {
             case IF:
                 return ifStatement();
             case ID:
-                return assignmentStatement();
+                Token.Type nextType = tokenizer.peek().type;
+                switch (nextType) {
+                    case ASSIGN:
+                        return assignmentStatement();
+
+                    case L_PAREN:
+                        return procedureCallStatement();
+
+                    default:
+                        throw UnexpectedTokenException.wrongType(nextType);
+                }
             default:
                 return empty();
         }
+    }
+
+    private ProcedureCallNode procedureCallStatement() {
+        Token<String> procedureId = eatStrict(Token.Type.ID);
+
+        // currently no arguments are accepted
+        eatStrict(Token.Type.L_PAREN);
+        eatStrict(Token.Type.R_PAREN);
+
+        return new ProcedureCallNode(currentScope, procedureId);
     }
 
     private IfStatementNode ifStatement() {

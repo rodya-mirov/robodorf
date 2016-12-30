@@ -28,4 +28,12 @@ public class VariableException extends IllegalStateException {
         );
         return new VariableException(errorMessage);
     }
+
+    public static VariableException doubleDefined(Scope scope, Token idToken) {
+        String errorMessage = String.format(
+                "The token %s already has a definition in the scope %s!",
+                idToken.value.toString(), scope.toString()
+        );
+        return new VariableException(errorMessage);
+    }
 }

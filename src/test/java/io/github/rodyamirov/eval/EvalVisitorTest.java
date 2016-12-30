@@ -4,6 +4,7 @@ import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.parse.Parser;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
+import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
@@ -39,13 +40,14 @@ public class EvalVisitorTest {
 
     private void doProgramTest(String toParse, SymbolValueTable desiredEndState) {
         ProgramNode parseTree = Parser.parseProgram(ROOT_SCOPE, toParse);
-        SymbolValueTable actualEndState = EvalVisitor.evaluateProgram(parseTree);
+        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(parseTree);
+        SymbolValueTable actualEndState = EvalVisitor.evaluateProgram(parseTree, symbolTable);
         assertThat("State at the end was correct", actualEndState, is(desiredEndState));
     }
 
     @Test
     public void exprTest1() {
-        SymbolTable symbolTable = SymbolTable.empty();
+        SymbolTable symbolTable = SymbolTable.builder().build();
         doExpressionTest("12+-1", symbolTable, 11);
         doExpressionTest("-12", symbolTable, -12);
         doExpressionTest("1*-13", symbolTable, -13);
@@ -71,7 +73,7 @@ public class EvalVisitorTest {
 
     @Test
     public void exprTest2() {
-        SymbolTable symbolTable = SymbolTable.empty();
+        SymbolTable symbolTable = SymbolTable.builder().build();
 
         doExpressionTest("1 mod 2", symbolTable, 1);
         doExpressionTest("5 mod 3", symbolTable, 2);
@@ -82,7 +84,7 @@ public class EvalVisitorTest {
 
     @Test
     public void exprTest3() {
-        SymbolTable symbolTable = SymbolTable.empty();
+        SymbolTable symbolTable = SymbolTable.builder().build();
 
         doExpressionTest("true", symbolTable, true);
         doExpressionTest("TrUe", symbolTable, true);
@@ -121,7 +123,7 @@ public class EvalVisitorTest {
 
     @Test
     public void exprTest4() {
-        SymbolTable symbolTable = SymbolTable.empty();
+        SymbolTable symbolTable = SymbolTable.builder().build();
 
         doExpressionTest("3.1 < 3", symbolTable, false);
         doExpressionTest("3.1 <= 3", symbolTable, false);
@@ -140,7 +142,7 @@ public class EvalVisitorTest {
 
     @Test
     public void exprTest5() {
-        SymbolTable symbolTable = SymbolTable.empty();
+        SymbolTable symbolTable = SymbolTable.builder().build();
 
         doExpressionTest("3.1 < 12.0*4-2", symbolTable, true);
         doExpressionTest("12.0-7.9 >= 1*4+6", symbolTable, false);

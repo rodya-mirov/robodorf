@@ -1,6 +1,7 @@
 package io.github.rodyamirov.parse;
 
 import com.google.common.collect.ImmutableList;
+import io.github.rodyamirov.exceptions.UnexpectedTokenException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.TypeSpec;
@@ -769,8 +770,8 @@ public class ParserTest {
         try {
             doParseProgramTest(text, programNode);
             assertThat("Shouldn't have gotten here", true, is(false));
-        } catch (IllegalStateException ise) {
-            assertThat(ise.getMessage(), is(String.format("Cannot accept type %s", Token.Type.ELSE.name())));
+        } catch (UnexpectedTokenException ise) {
+            assertThat(ise.getMessage(), is(String.format("Unexpected token type %s", Token.Type.ELSE.name())));
         }
     }
 

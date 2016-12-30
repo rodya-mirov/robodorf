@@ -19,6 +19,7 @@ import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -40,11 +41,7 @@ public class EvalVisitor extends NodeVisitor {
         return visitor.resultStack.pop();
     }
 
-    public static SymbolValueTable evaluateProgram(ProgramNode programNode) {
-        SymbolTableBuilder stb = new SymbolTableBuilder();
-        programNode.acceptVisit(stb);
-        SymbolTable symbolTable = stb.build();
-
+    public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
         EvalVisitor visitor = new EvalVisitor(symbolTable);
         programNode.acceptVisit(visitor);
         return visitor.symbolValueTable;
@@ -55,6 +52,17 @@ public class EvalVisitor extends NodeVisitor {
 
     private EvalVisitor(SymbolTable globalDeclarations) {
         symbolValueTable = new SymbolValueTable(globalDeclarations);
+    }
+
+    @Override
+    public void visit(ProcedureCallNode procCall) {
+        SymbolValue<ProcedureDeclarationNode> procValue =
+                symbolValueTable.getValue(procCall.scope, procCall.procedureName);
+
+        ProcedureDeclarationNode call = procValue.value;
+
+        // then just execute everything in it
+        call.blockNode.acceptVisit(this);
     }
 
     @Override

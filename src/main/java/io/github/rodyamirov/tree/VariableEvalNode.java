@@ -9,10 +9,9 @@ import java.util.Objects;
  * Created by richard.rast on 12/22/16.
  */
 public final class VariableEvalNode extends TerminalExpressionNode {
-    public final Token idToken;
-    public final String id;
+    public final Token<String> idToken;
 
-    public VariableEvalNode(Scope scope, Token idToken) {
+    public VariableEvalNode(Scope scope, Token<String> idToken) {
         super(scope);
 
         if (idToken == null || idToken.type != Token.Type.ID) {
@@ -20,7 +19,6 @@ public final class VariableEvalNode extends TerminalExpressionNode {
         }
 
         this.idToken = idToken;
-        this.id = (String) idToken.value;
     }
 
     @Override
@@ -37,7 +35,6 @@ public final class VariableEvalNode extends TerminalExpressionNode {
         VariableEvalNode other = (VariableEvalNode)o;
 
         return Objects.equals(this.idToken, other.idToken)
-                && Objects.equals(this.id, other.id)
                 && Objects.equals(this.scope, other.scope);
     }
 }

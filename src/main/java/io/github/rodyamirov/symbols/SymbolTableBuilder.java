@@ -13,6 +13,7 @@ import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -27,6 +28,12 @@ import io.github.rodyamirov.tree.VariableEvalNode;
  */
 public class SymbolTableBuilder extends NodeVisitor {
     private final SymbolTable.Builder builder;
+
+    public static SymbolTable buildFrom(ProgramNode programNode) {
+        SymbolTableBuilder visitor = new SymbolTableBuilder();
+        programNode.acceptVisit(visitor);
+        return visitor.build();
+    }
 
     public SymbolTableBuilder() {
         builder = SymbolTable.builder();
@@ -145,6 +152,11 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(VariableEvalNode variableEvalNode) {
+        // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(ProcedureCallNode procedureCallNode) {
         // does nothing; we're only concerned with variable declarations
     }
 }
