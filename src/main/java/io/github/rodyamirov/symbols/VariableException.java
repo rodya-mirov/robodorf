@@ -12,18 +12,18 @@ public class VariableException extends IllegalStateException {
         super(message);
     }
 
-    public static VariableException notAssigned(Token idToken) {
+    public static VariableException notAssigned(Scope scope, Token idToken) {
         String errorMessage = String.format(
-                "The variable %s does not have an assigned value!",
-                idToken.value.toString()
+                "The variable %s : %s does not have an assigned value!",
+                scope.toString(), idToken.value.toString()
         );
         return new VariableException(errorMessage);
     }
 
-    public static VariableException notDefined(Token idToken) {
+    public static VariableException notDefined(Scope scope, Token idToken) {
         String errorMessage = String.format(
-                "The variable %s has not been declared!",
-                idToken.value.toString()
+                "The variable %s : %s has not been declared!",
+                scope.toString(), idToken.value.toString()
         );
         return new VariableException(errorMessage);
     }
