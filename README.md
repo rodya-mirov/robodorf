@@ -25,6 +25,8 @@ In the above, `parseTree` will give a parsed version of the program (tokenizing 
 
 The code is hopefully self-documenting as there are not a huge number of comments. If you find a bug please let me know on the issues page, ideally with a failing test.
 
+Bugs are things that don't fit the Pascal standard (according to ISO-10206, rather than whatever the internet consensus seems to be). So if operator precedence is borked, or whatever -- let me know.
+
 That said, unimplemented features are _not_ bugs -- just things I haven't gotten to yet. So for example you can parse a procedure declaration, so long as it doesn't have any arguments, but you can't parse a procedure call (or anything to do with functions). You can't evaluate any of that, including just setting up the various variable declarations.
 
 However, math _is_ working; you can write basic arithmetic expressions of arbitrary complexity, with integer or float values, and it will all work great.
