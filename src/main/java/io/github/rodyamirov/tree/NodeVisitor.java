@@ -38,4 +38,5 @@ public abstract class NodeVisitor {
     public abstract void visit(VariableAssignNode variableAssignNode);
     public abstract void visit(VariableDeclarationNode variableDeclarationNode);
     public abstract void visit(VariableEvalNode variableEvalNode);
+    public abstract void visit(WhileNode whileNode);
 }

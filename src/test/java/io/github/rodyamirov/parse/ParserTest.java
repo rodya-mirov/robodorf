@@ -21,11 +21,13 @@ import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
+import io.github.rodyamirov.tree.StatementNode;
 import io.github.rodyamirov.tree.SyntaxTree;
 import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -83,6 +85,13 @@ public class ParserTest {
         for (String text : texts) {
             ExpressionNode actual = Parser.parseExpression(ROOT_SCOPE, text);
             assertThat("Got the correct expression tree", actual, is(desired));
+        }
+    }
+
+    private void doParseStatementTest(String[] texts, StatementNode desired) {
+        for (String text : texts) {
+            StatementNode actual = Parser.parseStatement(ROOT_SCOPE, text);
+            assertThat("Got the correct statement node", actual, is(desired));
         }
     }
 
@@ -1069,5 +1078,31 @@ public class ParserTest {
         );
 
         doParseProgramTest(new String[] { progText }, desired);
+    }
+
+    @Test
+    public void whileLoopTest1() {
+        String whileText = "while 1<2 do a:=1";
+        WhileNode desired = new WhileNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "1<2"),
+                Parser.parseStatement(ROOT_SCOPE, "a := 1")
+        );
+        doParseStatementTest(new String[] { whileText }, desired);
+    }
+
+    @Test
+    public void whileLoopTest2() {
+        String whileText = "while ((1<2) and (a>=b)) do while c<d do begin a:= 2; int:=3.2 end";
+        WhileNode desired = new WhileNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "((1<2) and (a>=b))"),
+                new WhileNode(
+                        ROOT_SCOPE,
+                        Parser.parseExpression(ROOT_SCOPE, "c<d"),
+                        Parser.parseStatement(ROOT_SCOPE, "begin a:= 2; int:=3.2 end")
+                )
+        );
+        doParseStatementTest(new String[] { whileText }, desired);
     }
 }

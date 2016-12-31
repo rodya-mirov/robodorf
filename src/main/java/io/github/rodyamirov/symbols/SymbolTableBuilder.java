@@ -22,6 +22,7 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 
 /**
  * Created by richard.rast on 12/27/16.
@@ -158,5 +159,11 @@ public class SymbolTableBuilder extends NodeVisitor {
     @Override
     public void visit(ProcedureCallNode procedureCallNode) {
         // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(WhileNode whileNode) {
+        whileNode.condition.acceptVisit(this);
+        whileNode.childStatement.acceptVisit(this);
     }
 }

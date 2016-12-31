@@ -27,6 +27,7 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,6 +104,14 @@ public class Parser {
         ProcedureDeclarationNode out = parser.procedureDeclaration();
         parser.eatStrict(Token.Type.EOF);
         return out;
+    }
+
+    public static StatementNode parseStatement(Scope rootScope, String text) {
+        Parser parser = new Parser(text);
+        parser.currentScope = rootScope;
+        StatementNode result = parser.statement();
+        parser.eatStrict(Token.Type.EOF);
+        return result;
     }
 
     public static ExpressionNode parseExpression(Scope rootScope, String text) {
@@ -231,6 +240,8 @@ public class Parser {
     private StatementNode statement() {
         // statement -> compoundStatement | ifStatement | assignmentStatement | empty
         switch (currentToken.type) {
+            case WHILE:
+                return whileStatement();
             case BEGIN:
                 return compoundStatement();
             case IF:
@@ -250,6 +261,18 @@ public class Parser {
             default:
                 return empty();
         }
+    }
+
+    private WhileNode whileStatement() {
+        eatStrict(Token.Type.WHILE);
+
+        ExpressionNode condition = expression();
+
+        eatStrict(Token.Type.DO);
+
+        StatementNode childStatement = statement();
+
+        return new WhileNode(currentScope, condition, childStatement);
     }
 
     private ProcedureCallNode procedureCallStatement() {

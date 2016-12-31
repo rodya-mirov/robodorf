@@ -3,7 +3,6 @@ package io.github.rodyamirov.eval;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
-import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
@@ -29,8 +28,10 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 
 import java.util.Stack;
+import java.util.function.Supplier;
 
 /**
  * Created by richard.rast on 12/25/16.
@@ -53,6 +54,20 @@ public class EvalVisitor extends NodeVisitor {
 
     private EvalVisitor(SymbolTable globalDeclarations) {
         symbolValueTable = new SymbolValueTable(globalDeclarations);
+    }
+
+    @Override
+    public void visit(WhileNode whileNode) {
+        Supplier<Boolean> checkCondition =
+                () -> {
+                    whileNode.condition.acceptVisit(this);
+                    SymbolValue<Boolean> result = resultStack.pop();
+                    return result.value;
+                };
+
+        while (checkCondition.get()) {
+            whileNode.childStatement.acceptVisit(this);
+        }
     }
 
     @Override
