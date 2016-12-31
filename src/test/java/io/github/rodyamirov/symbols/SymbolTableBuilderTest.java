@@ -73,7 +73,9 @@ public class SymbolTableBuilderTest {
                 + "         var d: REAL;"
                 + "             e: Integer;"
                 + "         begin {proc3}"
-                + "             d := 12"
+                + "             while 1<2 do ;" // empty while loop just for fun
+                + "             d := 12;"
+                + "             while d > 5 do d := d-1" // actually does something
                 + "         end {proc3};"
                 + "     begin {proc2}"
                 + "         d := 12;"
