@@ -38,8 +38,9 @@ public class SymbolTable {
         return Objects.equals(this.symbolTable, other.symbolTable);
     }
 
-    public static SymbolTable empty() {
-        return new SymbolTable(ImmutableMap.of());
+    @Override
+    public int hashCode() {
+        return symbolTable.hashCode();
     }
 
     /**
@@ -115,8 +116,12 @@ public class SymbolTable {
                 localTable = toReturn.get(scope);
             }
 
-            localTable.put(idToken, variableType);
-            return this;
+            if (localTable.containsKey(idToken)) {
+                throw VariableException.doubleDefined(scope, idToken);
+            } else {
+                localTable.put(idToken, variableType);
+                return this;
+            }
         }
 
         /**

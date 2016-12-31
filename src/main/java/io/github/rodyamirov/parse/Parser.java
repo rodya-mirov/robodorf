@@ -1,6 +1,7 @@
 package io.github.rodyamirov.parse;
 
 import com.google.common.collect.ImmutableSet;
+import io.github.rodyamirov.exceptions.UnexpectedTokenException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.lex.Tokenizer;
 import io.github.rodyamirov.symbols.Scope;
@@ -17,6 +18,7 @@ import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -69,8 +71,7 @@ public class Parser {
             currentToken = tokenizer.getNextToken();
             return out;
         } else {
-            String message = String.format("Cannot accept type %s", currentToken.type);
-            throw new IllegalStateException(message);
+            throw UnexpectedTokenException.wrongType(currentToken.type);
         }
     }
 
@@ -84,37 +85,31 @@ public class Parser {
         }
     }
 
-    public static ProgramNode parseProgram(String text) {
+    public static ProgramNode parseProgram(Scope rootScope, String text) {
         Parser parser = new Parser(text);
-        return parser.parseProgram();
+        parser.currentScope = rootScope;
+        ProgramNode programNode = parser.program();
+        parser.eatStrict(Token.Type.EOF);
+        return programNode;
     }
 
-    public ProgramNode parseProgram() {
-        ProgramNode result = program();
+    public static ProgramNode parseProgram(String text) {
+        return parseProgram(ROOT_SCOPE, text);
+    }
 
-        // just an assertion that we completed the text!
-        eatStrict(Token.Type.EOF);
-
-        return result;
+    public static ProcedureDeclarationNode parseProcedure(Scope rootScope, String text) {
+        Parser parser = new Parser(text);
+        parser.currentScope = rootScope;
+        ProcedureDeclarationNode out = parser.procedureDeclaration();
+        parser.eatStrict(Token.Type.EOF);
+        return out;
     }
 
     public static ExpressionNode parseExpression(Scope rootScope, String text) {
         Parser parser = new Parser(text);
         parser.currentScope = rootScope;
-        return parser.parseExpression();
-    }
-
-    public static ExpressionNode parseExpression(String text) {
-        Parser parser = new Parser(text);
-        return parser.parseExpression();
-    }
-
-    public ExpressionNode parseExpression() {
-        ExpressionNode result = expression();
-
-        // just an assertion that we completed the text!
-        eatStrict(Token.Type.EOF);
-
+        ExpressionNode result = parser.expression();
+        parser.eatStrict(Token.Type.EOF);
         return result;
     }
 
@@ -162,25 +157,31 @@ public class Parser {
 
         List<ProcedureDeclarationNode> procedures = new ArrayList<>();
 
-        while (eatNonstrict(Token.Type.PROCEDURE).isPresent()) {
-            Token<String> procedureName = eatStrict(Token.Type.ID);
-
-            Scope parentScope = currentScope;
-            currentScope = currentScope.makeChildScope(procedureName);
-
-            eatStrict(Token.Type.SEMI);
-            BlockNode blockNode = block();
-            eatStrict(Token.Type.SEMI);
-
-            currentScope = parentScope;
-
-            procedures.add(new ProcedureDeclarationNode(currentScope, procedureName, blockNode));
+        while (currentToken.type == Token.Type.PROCEDURE) {
+            procedures.add(procedureDeclaration());
         }
 
         return new DeclarationNode(currentScope, declarations, procedures);
     }
 
+    private ProcedureDeclarationNode procedureDeclaration() {
+        eatStrict(Token.Type.PROCEDURE);
+        Token<String> procedureName = eatStrict(Token.Type.ID);
+
+        Scope parentScope = currentScope;
+        currentScope = currentScope.makeChildScope(procedureName);
+
+        eatStrict(Token.Type.SEMI);
+        BlockNode blockNode = block();
+        eatStrict(Token.Type.SEMI);
+
+        currentScope = parentScope;
+
+        return new ProcedureDeclarationNode(currentScope, procedureName, blockNode);
+    }
+
     private VariableDeclarationNode variableDeclaration() {
+        // note that VAR is consumed elsewhere so we don't check it here
         List<Token<String>> ids = new ArrayList<>();
 
         ids.add(eatStrict(Token.Type.ID));
@@ -235,10 +236,30 @@ public class Parser {
             case IF:
                 return ifStatement();
             case ID:
-                return assignmentStatement();
+                Token.Type nextType = tokenizer.peek().type;
+                switch (nextType) {
+                    case ASSIGN:
+                        return assignmentStatement();
+
+                    case L_PAREN:
+                        return procedureCallStatement();
+
+                    default:
+                        throw UnexpectedTokenException.wrongType(nextType);
+                }
             default:
                 return empty();
         }
+    }
+
+    private ProcedureCallNode procedureCallStatement() {
+        Token<String> procedureId = eatStrict(Token.Type.ID);
+
+        // currently no arguments are accepted
+        eatStrict(Token.Type.L_PAREN);
+        eatStrict(Token.Type.R_PAREN);
+
+        return new ProcedureCallNode(currentScope, procedureId);
     }
 
     private IfStatementNode ifStatement() {

@@ -30,6 +30,7 @@ public abstract class NodeVisitor {
     public abstract void visit(IntConstantNode intConstantNode);
     public abstract void visit(NoOpNode noOpNode);
     public abstract void visit(OrElseNode orElseNode);
+    public abstract void visit(ProcedureCallNode procedureCallNode);
     public abstract void visit(ProcedureDeclarationNode procedureDeclarationNode);
     public abstract void visit(ProgramNode programNode);
     public abstract void visit(RealConstantNode intConstantNode);

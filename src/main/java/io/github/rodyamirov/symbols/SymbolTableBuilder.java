@@ -13,6 +13,7 @@ import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -21,13 +22,18 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
-import io.github.rodyamirov.utils.TODOException;
 
 /**
  * Created by richard.rast on 12/27/16.
  */
 public class SymbolTableBuilder extends NodeVisitor {
     private final SymbolTable.Builder builder;
+
+    public static SymbolTable buildFrom(ProgramNode programNode) {
+        SymbolTableBuilder visitor = new SymbolTableBuilder();
+        programNode.acceptVisit(visitor);
+        return visitor.build();
+    }
 
     public SymbolTableBuilder() {
         builder = SymbolTable.builder();
@@ -39,7 +45,7 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(ProgramNode programNode) {
-        // just looks for variable declaration nodes ...
+        builder.addSymbol(programNode.scope, programNode.name, TypeSpec.PROGRAM);
         programNode.blockNode.acceptVisit(this);
     }
 
@@ -62,8 +68,9 @@ public class SymbolTableBuilder extends NodeVisitor {
     }
 
     @Override
-    public void visit(ProcedureDeclarationNode procedureDeclarationNode) {
-        throw TODOException.make();
+    public void visit(ProcedureDeclarationNode procDecNode) {
+        builder.addSymbol(procDecNode.scope, procDecNode.name, TypeSpec.PROCEDURE);
+        procDecNode.blockNode.acceptVisit(this);
     }
 
     @Override
@@ -145,6 +152,11 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(VariableEvalNode variableEvalNode) {
+        // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(ProcedureCallNode procedureCallNode) {
         // does nothing; we're only concerned with variable declarations
     }
 }
