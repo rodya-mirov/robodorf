@@ -75,7 +75,9 @@ public class SymbolTableBuilderTest {
                 + "         begin {proc3}"
                 + "             while 1<2 do ;" // empty while loop just for fun
                 + "             d := 12;"
-                + "             while d > 5 do d := d-1" // actually does something
+                + "             while d > 5 do d := d-1;"  // actually does something
+                + "             do break until 1<2;"        // this is pretty stupid i admit
+                + "             do continue until 1=2"      // infinite loop!
                 + "         end {proc3};"
                 + "     begin {proc2}"
                 + "         d := 12;"

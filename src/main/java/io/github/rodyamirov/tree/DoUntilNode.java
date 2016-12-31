@@ -7,7 +7,7 @@ import java.util.Objects;
 /**
  * Created by richard.rast on 12/30/16.
  */
-public final class DoUntilNode extends StatementNode {
+public final class DoUntilNode extends LoopStatementNode {
     public final ExpressionNode condition;
     public final StatementNode childStatement;
 

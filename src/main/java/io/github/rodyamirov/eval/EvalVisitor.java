@@ -18,6 +18,7 @@ import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
+import io.github.rodyamirov.tree.LoopStatementNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -31,8 +32,10 @@ import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
+import io.github.rodyamirov.utils.SingleElementStack;
 import io.github.rodyamirov.utils.TODOException;
 
+import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Supplier;
 
@@ -52,7 +55,10 @@ public class EvalVisitor extends NodeVisitor {
         return visitor.symbolValueTable;
     }
 
-    private final Stack<SymbolValue> resultStack = new Stack<>();
+    private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
+    private final SingleElementStack<LoopControlNode> loopControlNodes = new SingleElementStack<>();
+
+    private final Stack<LoopStatementNode> loopNodeStack = new Stack<>();
     private final SymbolValueTable symbolValueTable;
 
     private EvalVisitor(SymbolTable globalDeclarations) {
@@ -68,9 +74,14 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
+        loopNodeStack.push(whileNode);
         while (checkCondition.get()) {
             whileNode.childStatement.acceptVisit(this);
+            if (eatLoopControl().filter(lc -> lc.type == LoopControlNode.Type.BREAK).isPresent()) {
+                break;
+            }
         }
+        loopNodeStack.pop();
     }
 
     @Override
@@ -82,14 +93,48 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
+        loopNodeStack.push(doUntilNode);
+
         do {
             doUntilNode.childStatement.acceptVisit(this);
+            if (eatLoopControl().filter(lc -> lc.type == LoopControlNode.Type.BREAK).isPresent()) {
+                break;
+            }
         } while (! checkCondition.get());
+
+        loopNodeStack.pop();
+    }
+
+    // safely pops the top loop control directive; returns true iff it's a break
+    private Optional<LoopControlNode> eatLoopControl() {
+        if (loopControlNodes.isEmpty()) {
+            return Optional.empty();
+        } else {
+            LoopControlNode loopControlNode = loopControlNodes.pop();
+
+            switch (loopControlNode.type) {
+                case BREAK:
+                case CONTINUE:
+                    return Optional.of(loopControlNode);
+
+                default:
+                    String message = String.format(
+                            "Unrecognized loop control directive %s",
+                            loopControlNode.type
+                    );
+                    throw new IllegalArgumentException(message);
+            }
+        }
     }
 
     @Override
     public void visit(LoopControlNode loopControlNode) {
-        throw TODOException.make();
+        if (loopNodeStack.isEmpty()) {
+            String message = String.format("Error: %s while not in loop!", loopControlNode.type.name());
+            throw new IllegalStateException(message);
+        }
+
+        loopControlNodes.push(loopControlNode);
     }
 
     @Override
@@ -255,14 +300,19 @@ public class EvalVisitor extends NodeVisitor {
     @Override
     public void visit(CompoundNode compoundNode) {
         for (StatementNode statement : compoundNode.statements) {
+            // this is the only place a continue/break actually does anything
+            if (! loopControlNodes.isEmpty()){
+                break;
+            }
+
             statement.acceptVisit(this);
         }
     }
 
     @Override
     public void visit(NoOpNode noOpNode) {
-        // it'symbolValueTable a No Op
-        // that means _no_ _operations_
+        // it's a No Op
+        // that means _no operations_
     }
 
     @Override
