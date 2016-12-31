@@ -24,6 +24,7 @@ public class Token<T> {
         IF, THEN, ELSE,
 
         EQUALS, NOT_EQUALS, LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS,
+        WHILE, DO, UNTIL, FOR, TO, DOWNTO, CONTINUE, BREAK,
 
         PROGRAM,        // PROGRAM
         PROCEDURE,      // PROCEDURE
@@ -133,6 +134,15 @@ public class Token<T> {
     public static final Token<Void> PROGRAM = voidToken(Type.PROGRAM);
     public static final Token<Void> PROCEDURE = voidToken(Type.PROCEDURE);
     public static final Token<Void> VAR = voidToken(Type.VAR);
+
+    public static final Token<Void> WHILE = voidToken(Type.WHILE);
+    public static final Token<Void> DO = voidToken(Type.DO);
+    public static final Token<Void> UNTIL = voidToken(Type.UNTIL);
+    public static final Token<Void> FOR = voidToken(Type.FOR);
+    public static final Token<Void> TO = voidToken(Type.TO);
+    public static final Token<Void> DOWNTO = voidToken(Type.DOWNTO);
+    public static final Token<Void> CONTINUE = voidToken(Type.CONTINUE);
+    public static final Token<Void> BREAK = voidToken(Type.BREAK);
 
     public static final Token<Boolean> TRUE = BOOLEAN_CONSTANT(true);
     public static final Token<Boolean> FALSE = BOOLEAN_CONSTANT(false);

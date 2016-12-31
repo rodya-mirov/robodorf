@@ -19,7 +19,8 @@ public class TokenizerTest {
         for (Token token : tokens) {
             for (int reps = 0; reps < 5; reps++) {
                 // this basically just checks that `peek` works as intended
-                assertThat(tokenizer.peek(), is(token));
+                Token next = tokenizer.peek();
+                assertThat(next, is(token));
             }
             assertThat(tokenizer.getNextToken(), is(token));
         }
@@ -110,8 +111,17 @@ public class TokenizerTest {
         };
 
         doTokenizerTest(text, correct);
+    }
 
-
+    @Test
+    public void loopReservedWordsTest() {
+        String text = "for while do until to downto in continue break";
+        Token[] correct = new Token[] {
+                Token.FOR, Token.WHILE, Token.DO, Token.UNTIL, Token.TO,
+                Token.DOWNTO, Token.ID("in"), Token.CONTINUE, Token.BREAK,
+                Token.EOF
+        };
+        doTokenizerTest(text, correct);
     }
 
     @Test
