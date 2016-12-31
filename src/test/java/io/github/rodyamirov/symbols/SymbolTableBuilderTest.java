@@ -79,6 +79,7 @@ public class SymbolTableBuilderTest {
                 + "         end {proc3};"
                 + "     begin {proc2}"
                 + "         d := 12;"
+                + "         do a := not a until a;"
                 + "         proc3();" // semi unnecessary, un-harmful
                 + "     end {proc2};"
                 + "begin {test3 -- the actual program!}"

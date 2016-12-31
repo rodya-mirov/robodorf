@@ -549,6 +549,34 @@ public class EvalVisitorTest {
     }
 
     @Test
+    public void doUntilTest1() {
+        Token<String> procName = Token.ID("proc1");
+        String procText = ""
+                + "procedure proc1;"
+                + " begin {proc1}"
+                + "     do a := a-2 until a <= 3"
+                + " end {proc1};";
+
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + "program whileTest1;"
+                + " var a: integer;"
+                + procText
+                + "begin {whileTest1}"
+                + " a := 12;"
+                + " proc1();"
+                + " a := a+3;"
+                + " proc1();"
+                + "end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, procName, SymbolValue.make(TypeSpec.PROCEDURE, Parser.parseProcedure(progScope, procText)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
     public void procCallTest1() {
         Token<String> progName = Token.ID("progIt");
         Scope progScope = ROOT_SCOPE.makeChildScope(progName);
