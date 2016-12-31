@@ -17,6 +17,7 @@ import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
 import io.github.rodyamirov.tree.ProcedureCallNode;
@@ -249,6 +250,12 @@ public class Parser {
                 return compoundStatement();
             case IF:
                 return ifStatement();
+            case BREAK:
+                eatStrict(Token.Type.BREAK);
+                return LoopControlNode.Break(currentScope);
+            case CONTINUE:
+                eatStrict(Token.Type.CONTINUE);
+                return LoopControlNode.Continue(currentScope);
             case ID:
                 Token.Type nextType = tokenizer.peek().type;
                 switch (nextType) {

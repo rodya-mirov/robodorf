@@ -17,6 +17,7 @@ import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -30,6 +31,7 @@ import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
+import io.github.rodyamirov.utils.TODOException;
 
 import java.util.Stack;
 import java.util.function.Supplier;
@@ -83,6 +85,11 @@ public class EvalVisitor extends NodeVisitor {
         do {
             doUntilNode.childStatement.acceptVisit(this);
         } while (! checkCondition.get());
+    }
+
+    @Override
+    public void visit(LoopControlNode loopControlNode) {
+        throw TODOException.make();
     }
 
     @Override

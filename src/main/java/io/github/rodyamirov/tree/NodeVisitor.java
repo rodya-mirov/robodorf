@@ -29,6 +29,7 @@ public abstract class NodeVisitor {
     public abstract void visit(DoUntilNode doUntilNode);
     public abstract void visit(IfStatementNode ifStatementNode);
     public abstract void visit(IntConstantNode intConstantNode);
+    public abstract void visit(LoopControlNode loopControlNode);
     public abstract void visit(NoOpNode noOpNode);
     public abstract void visit(OrElseNode orElseNode);
     public abstract void visit(ProcedureCallNode procedureCallNode);

@@ -11,6 +11,7 @@ import io.github.rodyamirov.tree.DeclarationNode;
 import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -159,6 +160,11 @@ public class SymbolTableBuilder extends NodeVisitor {
 
     @Override
     public void visit(ProcedureCallNode procedureCallNode) {
+        // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(LoopControlNode loopControlNode) {
         // does nothing; we're only concerned with variable declarations
     }
 

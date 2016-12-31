@@ -16,6 +16,7 @@ import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
 import io.github.rodyamirov.tree.ProcedureCallNode;
@@ -1138,6 +1139,24 @@ public class ParserTest {
                         ROOT_SCOPE,
                         Parser.parseExpression(ROOT_SCOPE, "false"),
                         Parser.parseStatement(ROOT_SCOPE, "while 1 < 2 do b := -12")
+                )
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void loopControlTest1() {
+        String loopText = "do begin break; continue; a := 12 end until 2 = 1";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "2=1"),
+                new CompoundNode(
+                        ROOT_SCOPE,
+                        list(
+                                LoopControlNode.Break(ROOT_SCOPE),
+                                LoopControlNode.Continue(ROOT_SCOPE),
+                                Parser.parseStatement(ROOT_SCOPE, "a:=12")
+                        )
                 )
         );
         doParseStatementTest(new String[] { loopText }, desired);
