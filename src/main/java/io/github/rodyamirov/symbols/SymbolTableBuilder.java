@@ -8,6 +8,7 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
@@ -165,5 +166,11 @@ public class SymbolTableBuilder extends NodeVisitor {
     public void visit(WhileNode whileNode) {
         whileNode.condition.acceptVisit(this);
         whileNode.childStatement.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(DoUntilNode doUntilNode) {
+        doUntilNode.condition.acceptVisit(this);
+        doUntilNode.childStatement.acceptVisit(this);
     }
 }

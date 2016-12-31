@@ -12,6 +12,7 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
@@ -1104,5 +1105,41 @@ public class ParserTest {
                 )
         );
         doParseStatementTest(new String[] { whileText }, desired);
+    }
+
+    @Test
+    public void doUntilLoopTest1() {
+        String loopText = "do a := 1 until 1<2";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "1<2"),
+                Parser.parseStatement(ROOT_SCOPE, "a:=1")
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void doUntilLoopTest2() {
+        /*
+        fun fact: indentation and carriage returns are a positive good
+            do
+                do
+                    while 1 < 2 do
+                        b := -12
+                until false
+            until true
+
+         */
+        String loopText = "do do while 1<2 do b := -12 until false until true";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "true"),
+                new DoUntilNode(
+                        ROOT_SCOPE,
+                        Parser.parseExpression(ROOT_SCOPE, "false"),
+                        Parser.parseStatement(ROOT_SCOPE, "while 1 < 2 do b := -12")
+                )
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
     }
 }

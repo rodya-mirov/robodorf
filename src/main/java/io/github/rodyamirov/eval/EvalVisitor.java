@@ -13,6 +13,7 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
@@ -68,6 +69,20 @@ public class EvalVisitor extends NodeVisitor {
         while (checkCondition.get()) {
             whileNode.childStatement.acceptVisit(this);
         }
+    }
+
+    @Override
+    public void visit(DoUntilNode doUntilNode) {
+        Supplier<Boolean> checkCondition =
+                () -> {
+                    doUntilNode.condition.acceptVisit(this);
+                    SymbolValue<Boolean> result = resultStack.pop();
+                    return result.value;
+                };
+
+        do {
+            doUntilNode.childStatement.acceptVisit(this);
+        } while (! checkCondition.get());
     }
 
     @Override

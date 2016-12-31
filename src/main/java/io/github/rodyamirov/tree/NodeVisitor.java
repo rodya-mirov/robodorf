@@ -26,6 +26,7 @@ public abstract class NodeVisitor {
     public abstract void visit(BooleanConstantNode booleanConstantNode);
     public abstract void visit(CompoundNode compoundNode);
     public abstract void visit(DeclarationNode declarationNode);
+    public abstract void visit(DoUntilNode doUntilNode);
     public abstract void visit(IfStatementNode ifStatementNode);
     public abstract void visit(IntConstantNode intConstantNode);
     public abstract void visit(NoOpNode noOpNode);

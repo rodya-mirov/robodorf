@@ -13,6 +13,7 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
@@ -240,6 +241,8 @@ public class Parser {
     private StatementNode statement() {
         // statement -> compoundStatement | ifStatement | assignmentStatement | empty
         switch (currentToken.type) {
+            case DO:
+                return doUntilStatement();
             case WHILE:
                 return whileStatement();
             case BEGIN:
@@ -261,6 +264,18 @@ public class Parser {
             default:
                 return empty();
         }
+    }
+
+    private DoUntilNode doUntilStatement() {
+        eatStrict(Token.Type.DO);
+
+        StatementNode childStatement = statement();
+
+        eatStrict(Token.Type.UNTIL);
+
+        ExpressionNode condition = expression();
+
+        return new DoUntilNode(currentScope, condition, childStatement);
     }
 
     private WhileNode whileStatement() {
