@@ -38,6 +38,11 @@ public class SymbolTable {
         return Objects.equals(this.symbolTable, other.symbolTable);
     }
 
+    @Override
+    public int hashCode() {
+        return symbolTable.hashCode();
+    }
+
     /**
      * Checks if there is a symbol defined by the specified token exactly at the specified
      * scope. So for example if there is a variable x defined at scope a.b, then

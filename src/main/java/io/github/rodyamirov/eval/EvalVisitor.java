@@ -1,6 +1,7 @@
 package io.github.rodyamirov.eval;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
 import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
@@ -63,6 +64,14 @@ public class EvalVisitor extends NodeVisitor {
 
         // then just execute everything in it
         call.blockNode.acceptVisit(this);
+
+        // then clear out instance variables! they should not persist between calls
+        for (VariableDeclarationNode vdn : call.blockNode.declarationNode.variableDeclarations) {
+            Scope scope = vdn.scope;
+            for (Token<String> idToken : vdn.variableIds) {
+                symbolValueTable.clearValue(scope, idToken);
+            }
+        }
     }
 
     @Override

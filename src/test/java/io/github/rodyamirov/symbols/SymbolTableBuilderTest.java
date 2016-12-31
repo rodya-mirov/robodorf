@@ -76,11 +76,14 @@ public class SymbolTableBuilderTest {
                 + "             d := 12"
                 + "         end {proc3};"
                 + "     begin {proc2}"
-                + "         d := 12"
+                + "         d := 12;"
+                + "         proc3();" // semi unnecessary, un-harmful
                 + "     end {proc2};"
                 + "begin {test3 -- the actual program!}"
                 + "     a := 12;"
-                + "     b := a+1"
+                + "     b := a+1;"
+                + "     proc1();"
+                + "     proc2()"
                 + "end {test3} .";
         SymbolTable symbolTable = SymbolTable.builder()
                 .addSymbol(ROOT_SCOPE, progName, TypeSpec.PROGRAM)

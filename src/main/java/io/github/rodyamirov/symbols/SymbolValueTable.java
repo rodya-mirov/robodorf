@@ -37,6 +37,11 @@ public class SymbolValueTable {
                 && Objects.equals(this.valueTables, other.valueTables);
     }
 
+    @Override
+    public int hashCode() {
+        return 43 * symbolTable.hashCode() + valueTables.hashCode();
+    }
+
     /**
      * Determines if there is a symbol matching the specified token at or below the specified scope.
      * So if the table has (only) x defined at a.b and y defined at a, then
@@ -146,5 +151,18 @@ public class SymbolValueTable {
         SymbolValue setValue = SymbolValueOps.convert(value, desired);
 
         valueTables.get(scope).put(idToken, setValue);
+    }
+
+    /**
+     * Unsets any value associated with the specified token, at the specified scope. This is fine
+     * to call repeatedly and does not check that a value was already set.
+     *
+     * @param scope The scope to start matches at
+     * @param idToken The token to match the symbol on
+     * @throws VariableException if there is no matching symbol
+     */
+    public void clearValue(Scope scope, Token<String> idToken) {
+        scope = closestScopeFound(scope, idToken);
+        valueTables.get(scope).remove(idToken);
     }
 }

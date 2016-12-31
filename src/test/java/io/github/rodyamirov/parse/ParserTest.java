@@ -17,6 +17,7 @@ import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
+import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static io.github.rodyamirov.parse.Parser.ROOT_SCOPE;
+import static io.github.rodyamirov.utils.ListHelper.list;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -77,16 +79,6 @@ public class ParserTest {
         return out;
     }
 
-    private <T> List<T> list(T... elements) {
-        List<T> out = new ArrayList<>();
-
-        for (T element : elements) {
-            out.add(element);
-        }
-
-        return out;
-    }
-
     private void doParseExpressionTest(String[] texts, SyntaxTree desired) {
         for (String text : texts) {
             ExpressionNode actual = Parser.parseExpression(ROOT_SCOPE, text);
@@ -94,7 +86,7 @@ public class ParserTest {
         }
     }
 
-    private void doParseProgramTest(String[] texts, SyntaxTree desired) {
+    private void doParseProgramTest(String[] texts, ProgramNode desired) {
         for (String text : texts) {
             ProgramNode actual = Parser.parseProgram(ROOT_SCOPE, text);
             assertThat("Got the correct parse tree", actual, is(desired));
@@ -816,7 +808,7 @@ public class ParserTest {
         Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
         // standard empty program
-        SyntaxTree progTree1 = new ProgramNode(
+        ProgramNode progTree1 = new ProgramNode(
                 ROOT_SCOPE,
                 progName,
                 new BlockNode(
@@ -838,7 +830,7 @@ public class ParserTest {
         Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
         // declare some variables, do nothing
-        SyntaxTree progTree2 = new ProgramNode(
+        ProgramNode progTree2 = new ProgramNode(
                 ROOT_SCOPE, progName,
                 new BlockNode(insideScope,
                         new DeclarationNode(insideScope,
@@ -873,7 +865,7 @@ public class ParserTest {
         Token<String> progName = Token.ID("test3");
         Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
-        SyntaxTree progTree3 = new ProgramNode(ROOT_SCOPE, progName, new BlockNode(insideScope,
+        ProgramNode progTree3 = new ProgramNode(ROOT_SCOPE, progName, new BlockNode(insideScope,
                 new DeclarationNode(insideScope,
                         list(
                                 new VariableDeclarationNode(insideScope,varList("a"), TypeSpec.INTEGER),
@@ -932,7 +924,7 @@ public class ParserTest {
         Token<String> procName = Token.ID("proc1");
         Scope procedureScope = progScope.makeChildScope(procName);
 
-        SyntaxTree progTree4 = new ProgramNode(ROOT_SCOPE,
+        ProgramNode progTree4 = new ProgramNode(ROOT_SCOPE,
                 progName,
                 new BlockNode(progScope,
                         new DeclarationNode(progScope,
@@ -1029,5 +1021,53 @@ public class ParserTest {
                         + "  a := true; b := false; c := a+b; d := yes"
                         + "end {all over}"
         };
+    }
+
+    @Test
+    public void procCallTest1() {
+        String proc1Text = "procedure proc1; var a: Real; begin a := 12; b := 3; end;";
+        String proc2Text = "procedure proc2; var b: Integer; begin a:= 1; b := 3; end;";
+        String proc3Text = "procedure proc3; var b: Integer; c: Boolean; begin c := True; if c then a := 3 else b := 3 end;";
+        String progText = String.format(
+                "program test1; var a, b: Integer; %s %s %s begin proc1(); proc1(); proc2(); proc3() end.",
+                proc1Text, proc2Text, proc3Text
+        );
+
+        Token<String> progName = Token.ID("test1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+
+        // we already believe we can parse procedure definitions from earlier tests, no need
+        // to type them all out again
+        Token<String> proc1Name = Token.ID("proc1");
+        ProcedureDeclarationNode proc1Node = Parser.parseProcedure(progScope, proc1Text);
+
+        Token<String> proc2Name = Token.ID("proc2");
+        ProcedureDeclarationNode proc2Node = Parser.parseProcedure(progScope, proc2Text);
+
+        Token<String> proc3Name = Token.ID("proc3");
+        ProcedureDeclarationNode proc3Node = Parser.parseProcedure(progScope, proc3Text);
+
+        ProgramNode desired = new ProgramNode(
+                ROOT_SCOPE, progName,
+                new BlockNode(
+                        progScope,
+                        new DeclarationNode(
+                                progScope,
+                                list(new VariableDeclarationNode(progScope, list(Token.ID("a"), Token.ID("b")), TypeSpec.INTEGER)),
+                                list(proc1Node, proc2Node, proc3Node)
+                        ),
+                        new CompoundNode(
+                                progScope,
+                                list(
+                                        new ProcedureCallNode(progScope, proc1Name),
+                                        new ProcedureCallNode(progScope, proc1Name),
+                                        new ProcedureCallNode(progScope, proc2Name),
+                                        new ProcedureCallNode(progScope, proc3Name)
+                                )
+                        )
+                )
+        );
+
+        doParseProgramTest(new String[] { progText }, desired);
     }
 }
