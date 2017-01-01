@@ -33,7 +33,6 @@ import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
 import io.github.rodyamirov.utils.SingleElementStack;
-import io.github.rodyamirov.utils.TODOException;
 
 import java.util.Optional;
 import java.util.Stack;
@@ -58,7 +57,9 @@ public class EvalVisitor extends NodeVisitor {
     private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
     private final SingleElementStack<LoopControlNode> loopControlNodes = new SingleElementStack<>();
 
-    private final Stack<LoopStatementNode> loopNodeStack = new Stack<>();
+    // not final; allows for other contexts to have their own loop stack more easily
+    private Stack<LoopStatementNode> loopNodeStack = new Stack<>();
+
     private final SymbolValueTable symbolValueTable;
 
     private EvalVisitor(SymbolTable globalDeclarations) {
@@ -144,6 +145,9 @@ public class EvalVisitor extends NodeVisitor {
 
         ProcedureDeclarationNode call = procValue.value;
 
+        Stack<LoopStatementNode> outsideLoopStack = loopNodeStack;
+        loopNodeStack = new Stack<>();
+
         // then just execute everything in it
         call.blockNode.acceptVisit(this);
 
@@ -154,6 +158,9 @@ public class EvalVisitor extends NodeVisitor {
                 symbolValueTable.clearValue(scope, idToken);
             }
         }
+
+        // restore the state of the loop stack once the procedure call is over
+        loopNodeStack = outsideLoopStack;
     }
 
     @Override

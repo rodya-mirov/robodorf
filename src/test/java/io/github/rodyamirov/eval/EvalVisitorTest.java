@@ -871,6 +871,80 @@ public class EvalVisitorTest {
     }
 
     @Test
+    public void procCallBreakTest() {
+        String prog;
+
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin break end;"
+                + "begin {program now}"
+                + " while true do"
+                + "     um()" // one statement loop
+                + "end .";
+
+        ProgramNode programNode = Parser.parseProgram(prog);
+        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        try {
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("Illegal break; should have thrown an error", false, is(true));
+        } catch (IllegalStateException e) {
+            // this is all good
+        }
+
+        // but also check that breaks inside procedure calls are still OK
+        prog = ""
+                + "program goodBreakTest;"
+                + "procedure um;"
+                + " begin while true do break end;"
+                + "begin um() end .";
+
+        programNode = Parser.parseProgram(prog);
+        symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        // no error needed
+        EvalVisitor.evaluateProgram(programNode, symbolTable);
+    }
+
+    @Test
+    public void procCallContinueTest() {
+        String prog;
+
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin continue end;"
+                + "begin {program now}"
+                + " while true do"
+                + "     um()" // one statement loop
+                + "end .";
+
+        ProgramNode programNode = Parser.parseProgram(prog);
+        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        try {
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("Illegal continue; should have thrown an error", false, is(true));
+        } catch (IllegalStateException e) {
+            // this is all good
+        }
+
+        // but some continues are ok
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin do continue until true end;"
+                + "begin {program now}"
+                + " um()"
+                + "end .";
+
+        programNode = Parser.parseProgram(prog);
+        symbolTable = SymbolTableBuilder.buildFrom(programNode);
+        EvalVisitor.evaluateProgram(programNode, symbolTable);
+    }
+
+    @Test
     public void procCallTest1() {
         Token<String> progName = Token.ID("progIt");
         Scope progScope = ROOT_SCOPE.makeChildScope(progName);
