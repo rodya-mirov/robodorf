@@ -64,6 +64,32 @@ public class SymbolTable {
     }
 
     /**
+     * Finds the uppermost scope, at or below the specified scope, where there is a registered
+     * symbol matching the specified token.
+     *
+     * @param scope The top scope to look in
+     * @param idToken The Token to match on
+     * @return The Scope of the closest match for this token
+     * @throws VariableException if there is no match at this scope or any scope below it
+     */
+    public Scope closestScopeFound(Scope scope, Token<String> idToken) {
+        Scope originalScope = scope; // for error logging if needed
+
+        boolean found = false;
+        while (!found) {
+            if (isDefinedExactlyAt(scope, idToken)) {
+                found = true;
+            } else if (scope.parentScope.isPresent()) {
+                scope = scope.parentScope.get();
+            } else {
+                throw VariableException.notDefined(originalScope, idToken);
+            }
+        }
+
+        return scope;
+    }
+
+    /**
      * Gets the type of the uppermost symbol exactly at the specified scope. So for example,
      * if there is a variable x:REAL at scope a and x:INTEGER at scope a.b (and nothing else
      * in the entire table), then
@@ -88,6 +114,19 @@ public class SymbolTable {
                 throw VariableException.notDefined(scope, idToken);
             }
         }
+    }
+
+    /**
+     * Finds the uppermost symbol, at or below the specified scope, which matches the idToken.
+     * Then returns the type associated to that variable at that scope.
+     *
+     * @param scope The scope to start matches at
+     * @param idToken The token to match the symbol on
+     * @throws VariableException if there is no matching symbol
+     */
+    public TypeSpec getType(Scope scope, Token idToken) {
+        scope = closestScopeFound(scope, idToken);
+        return getTypeExactlyAt(scope, idToken);
     }
 
     public static Builder builder() {

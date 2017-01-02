@@ -37,6 +37,7 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
         BooleanConstantNode other = (BooleanConstantNode) o;
 
         return Objects.equals(this.value, other.value)
+                && Objects.equals(this.outputType, other.outputType)
                 && Objects.equals(this.scope, other.scope);
     }
 

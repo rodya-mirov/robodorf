@@ -1,6 +1,7 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
+import io.github.rodyamirov.symbols.TypeSpec;
 
 import java.util.Objects;
 
@@ -9,6 +10,7 @@ import java.util.Objects;
  */
 public final class VariableAssignNode extends SyntaxTree {
     public final Token<String> idToken;
+    public TypeSpec variableType;
 
     public VariableAssignNode(Token<String> idToken) {
         if (idToken == null || idToken.type != Token.Type.ID) {

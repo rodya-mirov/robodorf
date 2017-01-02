@@ -1,5 +1,6 @@
 package io.github.rodyamirov.eval;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.parse.Parser;
 import io.github.rodyamirov.symbols.Scope;
@@ -168,6 +169,28 @@ public class EvalVisitorTest {
 
         doExpressionTest("3.1 < 12.0*4-2", symbolTable, true);
         doExpressionTest("12.0-7.9 >= 1*4+6", symbolTable, false);
+    }
+
+    @Test
+    public void wrongTypeTest1() {
+        // this throws a runtime exception -- SymbolValueTable handles this safety -- but
+        // preprocessing will also handle this
+        String progText = ""
+                + "program a;"
+                + " var b: integer;"
+                + " begin"
+                + "     b := false"
+                + " end .";
+
+        try {
+            ProgramNode programNode = Parser.parseProgram(progText);
+            ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
+            SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("An error should have been thrown", true, is(false));
+        } catch (TypeCheckException tce) {
+            // great :)
+        }
     }
 
     @Test
@@ -913,80 +936,6 @@ public class EvalVisitorTest {
         symbolValueTable.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 10.0f));
 
         doProgramTest(progText, symbolValueTable);
-    }
-
-    @Test
-    public void procCallBreakTest() {
-        String prog;
-
-        prog = ""
-                + "program badBreakTest;"
-                + "procedure um;"
-                + " begin break end;"
-                + "begin {program now}"
-                + " while true do"
-                + "     um()" // one statement loop
-                + "end .";
-
-        ProgramNode programNode = makeProgram(ROOT_SCOPE, prog).value;
-        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
-
-        try {
-            EvalVisitor.evaluateProgram(programNode, symbolTable);
-            assertThat("Illegal break; should have thrown an error", false, is(true));
-        } catch (IllegalStateException e) {
-            // this is all good
-        }
-
-        // but also check that breaks inside procedure calls are still OK
-        prog = ""
-                + "program goodBreakTest;"
-                + "procedure um;"
-                + " begin while true do break end;"
-                + "begin um() end .";
-
-        programNode = makeProgram(ROOT_SCOPE, prog).value;
-        symbolTable = SymbolTableBuilder.buildFrom(programNode);
-
-        // no error needed
-        EvalVisitor.evaluateProgram(programNode, symbolTable);
-    }
-
-    @Test
-    public void procCallContinueTest() {
-        String prog;
-
-        prog = ""
-                + "program badBreakTest;"
-                + "procedure um;"
-                + " begin continue end;"
-                + "begin {program now}"
-                + " while true do"
-                + "     um()" // one statement loop
-                + "end .";
-
-        ProgramNode programNode = makeProgram(ROOT_SCOPE, prog).value;
-        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
-
-        try {
-            EvalVisitor.evaluateProgram(programNode, symbolTable);
-            assertThat("Illegal continue; should have thrown an error", false, is(true));
-        } catch (IllegalStateException e) {
-            // this is all good
-        }
-
-        // but some continues are ok
-        prog = ""
-                + "program badBreakTest;"
-                + "procedure um;"
-                + " begin do continue until true end;"
-                + "begin {program now}"
-                + " um()"
-                + "end .";
-
-        programNode = makeProgram(ROOT_SCOPE, prog).value;
-        symbolTable = SymbolTableBuilder.buildFrom(programNode);
-        EvalVisitor.evaluateProgram(programNode, symbolTable);
     }
 
     @Test

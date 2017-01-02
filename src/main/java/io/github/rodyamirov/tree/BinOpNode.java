@@ -74,6 +74,7 @@ public final class BinOpNode extends ExpressionNode {
         return Objects.equals(this.opToken, other.opToken)
                 && Objects.equals(this.left, other.left)
                 && Objects.equals(this.right, other.right)
+                && Objects.equals(this.outputType, other.outputType)
                 && Objects.equals(this.scope, other.scope);
     }
 

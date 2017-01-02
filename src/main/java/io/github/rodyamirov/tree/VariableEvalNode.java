@@ -32,6 +32,7 @@ public final class VariableEvalNode extends TerminalExpressionNode {
         VariableEvalNode other = (VariableEvalNode)o;
 
         return Objects.equals(this.idToken, other.idToken)
+                && Objects.equals(this.outputType, other.outputType)
                 && Objects.equals(this.scope, other.scope);
     }
 

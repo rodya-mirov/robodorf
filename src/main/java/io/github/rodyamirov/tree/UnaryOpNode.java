@@ -57,6 +57,7 @@ public final class UnaryOpNode extends ExpressionNode {
 
         return Objects.equals(this.opToken, other.opToken)
                 && Objects.equals(this.child, other.child)
+                && Objects.equals(this.outputType, other.outputType)
                 && Objects.equals(this.scope, other.scope);
     }
 

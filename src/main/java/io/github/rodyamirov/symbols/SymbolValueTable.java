@@ -122,20 +122,7 @@ public class SymbolValueTable {
      * @throws VariableException if there is no match at this scope or any scope below it
      */
     public Scope closestScopeFound(Scope scope, Token<String> idToken) {
-        Scope originalScope = scope; // for error logging if needed
-
-        boolean found = false;
-        while (!found) {
-            if (symbolTable.isDefinedExactlyAt(scope, idToken)) {
-                found = true;
-            } else if (scope.parentScope.isPresent()) {
-                scope = scope.parentScope.get();
-            } else {
-                throw VariableException.notDefined(originalScope, idToken);
-            }
-        }
-
-        return scope;
+        return symbolTable.closestScopeFound(scope, idToken);
     }
 
     /**
@@ -224,12 +211,9 @@ public class SymbolValueTable {
      * @param scope The scope to start matches at
      * @param idToken The token to match the symbol on
      * @throws VariableException if there is no matching symbol
-     * @throws TypeCheckException if the specified value cannot be converted to the required value
      */
     public TypeSpec getType(Scope scope, Token<String> idToken) {
         // TODO: test this method
-        scope = closestScopeFound(scope, idToken);
-
         return symbolTable.getTypeExactlyAt(scope, idToken);
     }
 

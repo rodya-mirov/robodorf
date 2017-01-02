@@ -1,6 +1,5 @@
 package io.github.rodyamirov.eval;
 
-import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
@@ -20,7 +19,6 @@ import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
-import io.github.rodyamirov.tree.LoopStatementNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -36,30 +34,26 @@ import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
 import io.github.rodyamirov.utils.SingleElementStack;
 
-import java.util.Stack;
 import java.util.function.Supplier;
 
 /**
  * Created by richard.rast on 12/25/16.
  */
 public class EvalVisitor extends NodeVisitor {
-    public static SymbolValue evaluateExpression(ExpressionNode expressionNode, SymbolTable symbolTable) {
-        EvalVisitor visitor = new EvalVisitor(symbolTable);
-        expressionNode.acceptVisit(visitor);
-        return visitor.resultStack.pop();
+    public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
+        EvalVisitor evalVisitor = new EvalVisitor(symbolTable);
+        programNode.acceptVisit(evalVisitor);
+        return evalVisitor.symbolValueTable;
     }
 
-    public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
-        EvalVisitor visitor = new EvalVisitor(symbolTable);
-        programNode.acceptVisit(visitor);
-        return visitor.symbolValueTable;
+    public static SymbolValue evaluateExpression(ExpressionNode expressionNode, SymbolTable symbolTable) {
+        EvalVisitor evalVisitor = new EvalVisitor(symbolTable);
+        expressionNode.acceptVisit(evalVisitor);
+        return evalVisitor.resultStack.pop();
     }
 
     private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
     private final SingleElementStack<LoopControlNode> loopControlNodes = new SingleElementStack<>();
-
-    // not final; allows for other contexts to have their own loop stack more easily
-    private Stack<LoopStatementNode> loopNodeStack = new Stack<>();
 
     private final SymbolValueTable symbolValueTable;
 
@@ -76,14 +70,12 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
-        loopNodeStack.push(whileNode);
         while (checkCondition.get()) {
             whileNode.childStatement.acceptVisit(this);
             if (endLoopShouldBreak()) {
                 break;
             }
         }
-        loopNodeStack.pop();
     }
 
     @Override
@@ -95,34 +87,23 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
-        loopNodeStack.push(doUntilNode);
-
         do {
             doUntilNode.childStatement.acceptVisit(this);
             if (endLoopShouldBreak()) {
                 break;
             }
         } while (! checkCondition.get());
-
-        loopNodeStack.pop();
     }
 
     @Override
     public void visit(ForNode forNode) {
-        loopNodeStack.push(forNode);
-
         VariableAssignNode loopVariable = forNode.assignNode.variableAssignNode;
-
-        // TODO move this check to a semantic analyzer
-        TypeSpec assignType = symbolValueTable.getType(forNode.scope, forNode.assignNode.variableAssignNode.idToken);
-        if (assignType != TypeSpec.INTEGER) {
-            throw TypeCheckException.wrongValueClass(assignType, TypeSpec.INTEGER);
-        }
 
         // set up the start
         forNode.assignNode.expressionNode.acceptVisit(this);
         int start = ((SymbolValue<Integer>) resultStack.pop()).value;
 
+        // set up the end
         forNode.bound.acceptVisit(this);
         int end = ((SymbolValue<Integer>) resultStack.pop()).value;
 
@@ -152,8 +133,6 @@ public class EvalVisitor extends NodeVisitor {
                 break;
             }
         }
-
-        loopNodeStack.pop();
     }
 
     // safely pops the top loop control directive; returns true iff it's a break
@@ -181,11 +160,6 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(LoopControlNode loopControlNode) {
-        if (loopNodeStack.isEmpty()) {
-            String message = String.format("Error: %s while not in loop!", loopControlNode.type.name());
-            throw new IllegalStateException(message);
-        }
-
         loopControlNodes.push(loopControlNode);
     }
 
@@ -196,10 +170,7 @@ public class EvalVisitor extends NodeVisitor {
 
         ProcedureDeclarationNode call = procValue.value;
 
-        Stack<LoopStatementNode> outsideLoopStack = loopNodeStack;
-        loopNodeStack = new Stack<>();
-
-        // then just execute everything in it
+        // just execute everything in the procedure declaration
         call.blockNode.acceptVisit(this);
 
         // then clear out instance variables! they should not persist between calls
@@ -209,9 +180,6 @@ public class EvalVisitor extends NodeVisitor {
                 symbolValueTable.clearValue(scope, idToken);
             }
         }
-
-        // restore the state of the loop stack once the procedure call is over
-        loopNodeStack = outsideLoopStack;
     }
 
     @Override
