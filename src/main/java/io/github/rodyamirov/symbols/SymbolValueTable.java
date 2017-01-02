@@ -15,13 +15,16 @@ import java.util.function.Supplier;
 public class SymbolValueTable {
     private final SymbolTable symbolTable;
     private final Map<Scope, Map<Token<String>, SymbolValue>> valueTables;
+    private final Map<Scope, Map<Token<String>, Integer>> valueLocks;
 
     public SymbolValueTable(SymbolTable symbolTable) {
         this.symbolTable = symbolTable;
         valueTables = new HashMap<>();
+        valueLocks = new HashMap<>();
 
         for (Scope scope : symbolTable.knownScopes()) {
             valueTables.put(scope, new HashMap<>());
+            valueLocks.put(scope, new HashMap<>());
         }
     }
 
@@ -34,7 +37,8 @@ public class SymbolValueTable {
         SymbolValueTable other = (SymbolValueTable)o;
 
         return Objects.equals(this.symbolTable, other.symbolTable)
-                && Objects.equals(this.valueTables, other.valueTables);
+                && Objects.equals(this.valueTables, other.valueTables)
+                && Objects.equals(this.valueLocks, other.valueLocks);
     }
 
     @Override
@@ -136,6 +140,61 @@ public class SymbolValueTable {
 
     /**
      * Finds the uppermost symbol, at or below the specified scope, which matches the idToken.
+     * Then increases the lock level by one for that variable.
+     *
+     * @param scope The scope to start matches at
+     * @param idToken The token to match the symbol on
+     * @throws VariableException if there is no matching symbol
+     */
+    public void lockValue(Scope scope, Token<String> idToken) {
+        // TODO test this method
+        Scope closestScope = closestScopeFound(scope, idToken);
+
+        Map<Token<String>, Integer> localLock = valueLocks.get(scope);
+
+        if (valueLocks.containsKey(idToken)) {
+            int currentLockLevel = localLock.get(idToken);
+            localLock.put(idToken, currentLockLevel + 1);
+        } else { // that means it's zero
+            localLock.put(idToken, 1);
+        }
+    }
+
+    /**
+     * Finds the uppermost symbol, at or below the specified scope, which matches the idToken.
+     * Then reduces the lock level by one.
+     *
+     * @param scope The scope to start matches at
+     * @param idToken The token to match the symbol on
+     * @throws VariableException if there is no matching symbol
+     * @throws IllegalStateException if the value is already fully unlocked
+     */
+    public void unlockValue(Scope scope, Token<String> idToken) {
+        // TODO test this method
+        scope = closestScopeFound(scope, idToken);
+
+        Map<Token<String>, Integer> localLock = valueLocks.get(scope);
+
+        // important; never store zero as a value, always unset it
+        // it's a useful condition to maintain for the purpose of equality
+        int currentLockLevel = localLock.get(idToken);
+        if (currentLockLevel <= 0) {
+            throw new IllegalStateException("Cannot unlock a variable which is not locked");
+        } else if (currentLockLevel == 1) {
+            localLock.remove(idToken);
+        } else {
+            localLock.put(idToken, currentLockLevel - 1);
+        }
+    }
+
+    public boolean isValueLocked(Scope scope, Token<String> idToken) {
+        // TODO test this method
+        scope = closestScopeFound(scope, idToken);
+        return valueLocks.get(scope).containsKey(idToken);
+    }
+
+    /**
+     * Finds the uppermost symbol, at or below the specified scope, which matches the idToken.
      * It then sets the associated value to the specified value.
      *
      * @param scope The scope to start matches at
@@ -150,7 +209,28 @@ public class SymbolValueTable {
         TypeSpec desired = symbolTable.getTypeExactlyAt(scope, idToken);
         SymbolValue setValue = SymbolValueOps.convert(value, desired);
 
-        valueTables.get(scope).put(idToken, setValue);
+        // TODO: test locking behavior
+        if (isValueLocked(scope, idToken)) {
+            throw new IllegalStateException("Cannot set the value of a locked variable!");
+        } else {
+            valueTables.get(scope).put(idToken, setValue);
+        }
+    }
+
+    /**
+     * Finds the uppermost symbol, at or below the specified scope, which matches the idToken.
+     * Then returns the type associated to that variable at that scope.
+     *
+     * @param scope The scope to start matches at
+     * @param idToken The token to match the symbol on
+     * @throws VariableException if there is no matching symbol
+     * @throws TypeCheckException if the specified value cannot be converted to the required value
+     */
+    public TypeSpec getType(Scope scope, Token<String> idToken) {
+        // TODO: test this method
+        scope = closestScopeFound(scope, idToken);
+
+        return symbolTable.getTypeExactlyAt(scope, idToken);
     }
 
     /**

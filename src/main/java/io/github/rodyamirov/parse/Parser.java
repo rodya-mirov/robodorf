@@ -15,6 +15,7 @@ import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
 import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
@@ -242,6 +243,8 @@ public class Parser {
     private StatementNode statement() {
         // statement -> compoundStatement | ifStatement | assignmentStatement | empty
         switch (currentToken.type) {
+            case FOR:
+                return forStatement();
             case DO:
                 return doUntilStatement();
             case WHILE:
@@ -270,6 +273,32 @@ public class Parser {
                 }
             default:
                 return empty();
+        }
+    }
+
+    private ForNode forStatement() {
+        eatStrict(Token.Type.FOR);
+
+        AssignNode assignNode = assignmentStatement();
+
+        Token directionToken = eatStrict(Token.Type.TO, Token.Type.DOWNTO);
+
+        ExpressionNode bound = expression();
+
+        eatStrict(Token.Type.DO);
+
+        StatementNode body = statement();
+
+        switch (directionToken.type) {
+            case TO:
+                return ForNode.Forward(currentScope, assignNode, bound, body);
+
+            case DOWNTO:
+                return ForNode.Backward(currentScope, assignNode, bound, body);
+
+            default:
+                String message = String.format("Unrecognized direction token %s", directionToken);
+                throw new IllegalStateException(message);
         }
     }
 
@@ -324,7 +353,7 @@ public class Parser {
         }
     }
 
-    private StatementNode assignmentStatement() {
+    private AssignNode assignmentStatement() {
         // assignmentStatement -> variable ASSIGN additiveExpression
         VariableAssignNode var = variableDefinition();
         eatStrict(Token.Type.ASSIGN);

@@ -14,6 +14,7 @@ import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
 import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
@@ -1158,6 +1159,30 @@ public class ParserTest {
                                 Parser.parseStatement(ROOT_SCOPE, "a:=12")
                         )
                 )
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void forLoopTest1() {
+        String loopText = "for a:=30+12-pro to 12-6*b do begin end";
+        ForNode desired = ForNode.Forward(
+                ROOT_SCOPE,
+                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
+                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
+                Parser.parseStatement(ROOT_SCOPE, "begin end")
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void forLoopTest2() {
+        String loopText = "for a:=30+12-pro downto 12-6*b do begin end";
+        ForNode desired = ForNode.Backward(
+                ROOT_SCOPE,
+                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
+                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
+                Parser.parseStatement(ROOT_SCOPE, "begin end")
         );
         doParseStatementTest(new String[] { loopText }, desired);
     }

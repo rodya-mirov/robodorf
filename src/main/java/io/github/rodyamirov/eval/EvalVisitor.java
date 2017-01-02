@@ -1,5 +1,6 @@
 package io.github.rodyamirov.eval;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
@@ -15,6 +16,7 @@ import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
 import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
@@ -78,7 +80,7 @@ public class EvalVisitor extends NodeVisitor {
         loopNodeStack.push(whileNode);
         while (checkCondition.get()) {
             whileNode.childStatement.acceptVisit(this);
-            if (eatLoopControl().filter(lc -> lc.type == LoopControlNode.Type.BREAK).isPresent()) {
+            if (endLoopShouldBreak()) {
                 break;
             }
         }
@@ -98,7 +100,7 @@ public class EvalVisitor extends NodeVisitor {
 
         do {
             doUntilNode.childStatement.acceptVisit(this);
-            if (eatLoopControl().filter(lc -> lc.type == LoopControlNode.Type.BREAK).isPresent()) {
+            if (endLoopShouldBreak()) {
                 break;
             }
         } while (! checkCondition.get());
@@ -106,17 +108,67 @@ public class EvalVisitor extends NodeVisitor {
         loopNodeStack.pop();
     }
 
+    @Override
+    public void visit(ForNode forNode) {
+        loopNodeStack.push(forNode);
+
+        VariableAssignNode loopVariable = forNode.assignNode.variableAssignNode;
+
+        // TODO move this check to a semantic analyzer
+        TypeSpec assignType = symbolValueTable.getType(forNode.scope, forNode.assignNode.variableAssignNode.idToken);
+        if (assignType != TypeSpec.INTEGER) {
+            throw TypeCheckException.wrongValueClass(assignType, TypeSpec.INTEGER);
+        }
+
+        // set up the start
+        forNode.assignNode.expressionNode.acceptVisit(this);
+        int start = ((SymbolValue<Integer>) resultStack.pop()).value;
+
+        forNode.bound.acceptVisit(this);
+        int end = ((SymbolValue<Integer>) resultStack.pop()).value;
+
+        int change;
+        switch (forNode.direction) {
+            case FORWARD:
+                change = 1; break;
+
+            case BACKWARD:
+                change = -1; break;
+
+            default:
+                String message = String.format("Unrecognized direction %s for a for-loop", forNode.direction);
+                throw new IllegalStateException(message);
+        }
+
+        for (int i = start; i != end+change; i += change) {
+            SymbolValue<Integer> loopValue = SymbolValue.make(TypeSpec.INTEGER, i);
+            symbolValueTable.setValue(forNode.scope, loopVariable.idToken, loopValue);
+            symbolValueTable.lockValue(forNode.scope, loopVariable.idToken);
+
+            forNode.body.acceptVisit(this);
+
+            symbolValueTable.unlockValue(forNode.scope, loopVariable.idToken);
+
+            if (endLoopShouldBreak()) {
+                break;
+            }
+        }
+
+        loopNodeStack.pop();
+    }
+
     // safely pops the top loop control directive; returns true iff it's a break
-    private Optional<LoopControlNode> eatLoopControl() {
+    private boolean endLoopShouldBreak() {
         if (loopControlNodes.isEmpty()) {
-            return Optional.empty();
+            return false;
         } else {
             LoopControlNode loopControlNode = loopControlNodes.pop();
 
             switch (loopControlNode.type) {
                 case BREAK:
+                    return true;
                 case CONTINUE:
-                    return Optional.of(loopControlNode);
+                    return false;
 
                 default:
                     String message = String.format(

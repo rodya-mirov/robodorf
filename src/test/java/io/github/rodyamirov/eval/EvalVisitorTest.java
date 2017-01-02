@@ -8,7 +8,9 @@ import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
+import io.github.rodyamirov.tree.AssignNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import org.junit.Test;
@@ -868,6 +870,34 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("good"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("bad"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void forLoopTest1() {
+        String progText = ""
+                + "program a;"
+                + "     var a, b: integer; c: integer; d: real;"
+                + "begin"
+                + "     a := 1;"
+                + "     b := 30;"
+                + "     c := 0;"
+                + "     d := b+1;"
+                + "     for a:=b*b to 913 do"
+                + "         c := c+1;"
+                + "     for a := b downto 10 do"
+                + "         d := d-1"
+                + "end .";
+
+        Token<String> progName = Token.ID("a");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        SymbolValueTable symbolValueTable = new SymbolValueTable(makeSymbolTable(progText));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(progText)));
+        symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 10));
+        symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 30));
+        symbolValueTable.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 14));
+        symbolValueTable.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 10.0f));
+
+        doProgramTest(progText, symbolValueTable);
     }
 
     @Test
