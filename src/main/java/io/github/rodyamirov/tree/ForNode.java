@@ -1,7 +1,5 @@
 package io.github.rodyamirov.tree;
 
-import io.github.rodyamirov.symbols.Scope;
-
 import java.util.Objects;
 
 /**
@@ -15,21 +13,19 @@ public class ForNode extends LoopStatementNode {
     public final StatementNode body;
     public final Direction direction;
 
-    private ForNode(Scope scope, AssignNode assignNode, ExpressionNode bound, StatementNode body, Direction direction) {
-        super(scope);
-
+    private ForNode(AssignNode assignNode, ExpressionNode bound, StatementNode body, Direction direction) {
         this.assignNode = assignNode;
         this.bound = bound;
         this.body = body;
         this.direction = direction;
     }
 
-    public static ForNode Forward(Scope scope, AssignNode assignNode, ExpressionNode bound, StatementNode body) {
-        return new ForNode(scope, assignNode, bound, body, Direction.FORWARD);
+    public static ForNode Forward(AssignNode assignNode, ExpressionNode bound, StatementNode body) {
+        return new ForNode(assignNode, bound, body, Direction.FORWARD);
     }
 
-    public static ForNode Backward(Scope scope, AssignNode assignNode, ExpressionNode bound, StatementNode body) {
-        return new ForNode(scope, assignNode, bound, body, Direction.BACKWARD);
+    public static ForNode Backward(AssignNode assignNode, ExpressionNode bound, StatementNode body) {
+        return new ForNode(assignNode, bound, body, Direction.BACKWARD);
     }
 
     @Override
@@ -45,16 +41,16 @@ public class ForNode extends LoopStatementNode {
 
         ForNode other = (ForNode)o;
 
-        return Objects.equals(this.scope, other.scope)
-                && Objects.equals(this.assignNode, other.assignNode)
+        return Objects.equals(this.assignNode, other.assignNode)
                 && Objects.equals(this.bound, other.bound)
                 && Objects.equals(this.body, other.body)
-                && Objects.equals(this.direction, other.direction);
+                && Objects.equals(this.direction, other.direction)
+                && Objects.equals(this.scope, other.scope);
     }
 
     @Override
     public int hashCode() {
-        int hashCode = scope.hashCode();
+        int hashCode = Objects.hashCode(scope);
         hashCode = 43 * hashCode + assignNode.hashCode();
         hashCode = 43 * hashCode + bound.hashCode();
         hashCode = 43 * hashCode + body.hashCode();

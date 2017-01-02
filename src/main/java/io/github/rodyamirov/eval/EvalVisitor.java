@@ -36,7 +36,6 @@ import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
 import io.github.rodyamirov.utils.SingleElementStack;
 
-import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Supplier;
 

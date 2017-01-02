@@ -66,9 +66,7 @@ public class Token<T> {
     @Override
     public int hashCode() {
         int out = 137 * type.ordinal();
-        if (value != null) {
-            out += 13 * value.hashCode();
-        }
+        out += Objects.hashCode(value);
         return out;
     }
 

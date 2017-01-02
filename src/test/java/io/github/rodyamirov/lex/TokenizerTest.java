@@ -127,7 +127,7 @@ public class TokenizerTest {
     @Test
     public void simpleTest() {
         String text = "";
-        Token[] correct = new Token[] { Token.EOF, Token.EOF, Token.EOF }; // and so on
+        Token[] correct = new Token[] {Token.EOF, Token.EOF, Token.EOF}; // and so on
 
         doTokenizerTest(text, correct);
     }
@@ -135,7 +135,7 @@ public class TokenizerTest {
     @Test
     public void whitespaceTest() {
         String text = "    \t \n  \r";
-        Token[] correct = new Token[] { Token.EOF, Token.EOF, Token.EOF }; // and so on
+        Token[] correct = new Token[] {Token.EOF, Token.EOF, Token.EOF}; // and so on
 
         doTokenizerTest(text, correct);
     }
@@ -147,7 +147,7 @@ public class TokenizerTest {
                 Token.REAL_CONSTANT(11.12f),
                 Token.INT_CONSTANT(12), Token.INT_CONSTANT(14),
                 Token.INT_CONSTANT(11), Token.INT_CONSTANT(1),
-                Token.EOF, Token.EOF, Token.EOF }; // and so on
+                Token.EOF, Token.EOF, Token.EOF}; // and so on
 
         doTokenizerTest(text, correct);
     }
@@ -159,7 +159,8 @@ public class TokenizerTest {
         String text = "var a, b, int: integer; b, c, float: real; c, d, bool: boolean;";
         Token[] correct = new Token[] {
                 Token.VAR, Token.ID("a"), Token.COMMA, Token.ID("b"), Token.COMMA, Token.ID("int"),
-                Token.COLON, Token.INTEGER_TYPE, Token.SEMI, Token.ID("b"), Token.COMMA, Token.ID("c"),
+                Token.COLON, Token.INTEGER_TYPE, Token.SEMI, Token.ID("b"), Token.COMMA,
+                Token.ID("c"),
                 Token.COMMA, Token.ID("float"), Token.COLON, Token.REAL_TYPE, Token.SEMI,
                 Token.ID("c"), Token.COMMA, Token.ID("d"), Token.COMMA, Token.ID("Bool"),
                 Token.COLON, Token.BOOLEAN_TYPE, Token.SEMI,
@@ -173,16 +174,18 @@ public class TokenizerTest {
     public void operatorsTest() {
         String text = "+*div-/+DiV+//";
         Token[] correct = new Token[] {
-                Token.PLUS, Token.TIMES, Token.INT_DIVIDE, Token.MINUS, Token.REAL_DIVIDE, Token.PLUS,
+                Token.PLUS, Token.TIMES, Token.INT_DIVIDE, Token.MINUS, Token.REAL_DIVIDE,
+                Token.PLUS,
                 Token.INT_DIVIDE, Token.PLUS, Token.REAL_DIVIDE, Token.REAL_DIVIDE,
-                Token.EOF, Token.EOF, Token.EOF }; // and so on
+                Token.EOF, Token.EOF, Token.EOF}; // and so on
 
         doTokenizerTest(text, correct);
     }
 
     @Test
     public void mixedTest() {
-        String text = "\t12- 13+DIV+\n-/\t1- 5 If IF mod if _if AnD thEn or ELSE div true falsE FaLse TrUE F T";
+        String text =
+                "\t12- 13+DIV+\n-/\t1- 5 If IF mod if _if AnD thEn or ELSE div true falsE FaLse TrUE F T";
         Token[] correct = new Token[] {
                 Token.INT_CONSTANT(12), Token.MINUS, Token.INT_CONSTANT(13),
                 Token.PLUS, Token.INT_DIVIDE, Token.PLUS,
@@ -192,7 +195,7 @@ public class TokenizerTest {
                 Token.AND, Token.THEN, Token.OR, Token.ELSE,
                 Token.INT_DIVIDE, Token.TRUE, Token.FALSE, Token.FALSE,
                 Token.TRUE, Token.ID("F"), Token.ID("T"),
-                Token.EOF, Token.EOF, Token.EOF }; // and so on
+                Token.EOF, Token.EOF, Token.EOF}; // and so on
 
         doTokenizerTest(text, correct);
     }

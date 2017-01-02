@@ -1,7 +1,6 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 
 import java.util.Objects;
 
@@ -12,8 +11,7 @@ public final class ProcedureDeclarationNode extends SyntaxTree {
     public final Token<String> name;
     public final BlockNode blockNode;
 
-    public ProcedureDeclarationNode(Scope scope, Token<String> name, BlockNode blockNode) {
-        super(scope);
+    public ProcedureDeclarationNode(Token<String> name, BlockNode blockNode) {
         this.name = name;
         this.blockNode = blockNode;
     }
@@ -33,5 +31,13 @@ public final class ProcedureDeclarationNode extends SyntaxTree {
         return Objects.equals(this.name, other.name)
                 && Objects.equals(this.blockNode, other.blockNode)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + blockNode.hashCode();
+        out = 43 * out + name.hashCode();
+        return out;
     }
 }

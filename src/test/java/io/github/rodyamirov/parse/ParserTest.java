@@ -3,7 +3,6 @@ package io.github.rodyamirov.parse;
 import com.google.common.collect.ImmutableList;
 import io.github.rodyamirov.exceptions.UnexpectedTokenException;
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
 import io.github.rodyamirov.tree.AssignNode;
@@ -37,7 +36,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static io.github.rodyamirov.parse.Parser.ROOT_SCOPE;
 import static io.github.rodyamirov.utils.ListHelper.list;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -46,32 +44,20 @@ import static org.hamcrest.core.Is.is;
  * Created by richard.rast on 12/25/16.
  */
 public class ParserTest {
-    private static IntConstantNode rootConstant(int value) {
-        return constant(ROOT_SCOPE, value);
+    private static IntConstantNode constant(int value) {
+        return IntConstantNode.make(Token.INT_CONSTANT(value));
     }
-    
-    private static IntConstantNode constant(Scope scope, int value) {
-        return IntConstantNode.make(scope, Token.INT_CONSTANT(value));
+
+    private static RealConstantNode constant(float value) {
+        return RealConstantNode.make(Token.REAL_CONSTANT(value));
     }
-    
-    private static RealConstantNode rootConstant(float value) {
-        return constant(ROOT_SCOPE, value);
-    }
-    
-    private static RealConstantNode constant(Scope scope, float value) {
-        return RealConstantNode.make(scope, Token.REAL_CONSTANT(value));
-    }
-    
-    private static BooleanConstantNode rootConstant(boolean value) {
-        return constant(ROOT_SCOPE, value);
-    }
-    
-    private static BooleanConstantNode constant(Scope scope, boolean value) {
-        return BooleanConstantNode.make(scope, Token.BOOLEAN_CONSTANT(value));
+
+    private static BooleanConstantNode constant(boolean value) {
+        return BooleanConstantNode.make(Token.BOOLEAN_CONSTANT(value));
     }
 
     private UnaryOpNode minus(ExpressionNode node) {
-        return new UnaryOpNode(node.scope, node, Token.MINUS);
+        return new UnaryOpNode(node, Token.MINUS);
     }
 
     private List<Token<String>> varList(String... ids) {
@@ -86,34 +72,28 @@ public class ParserTest {
 
     private void doParseExpressionTest(String[] texts, SyntaxTree desired) {
         for (String text : texts) {
-            ExpressionNode actual = Parser.parseExpression(ROOT_SCOPE, text);
+            ExpressionNode actual = Parser.parseExpression(text);
             assertThat("Got the correct expression tree", actual, is(desired));
         }
     }
 
     private void doParseStatementTest(String[] texts, StatementNode desired) {
         for (String text : texts) {
-            StatementNode actual = Parser.parseStatement(ROOT_SCOPE, text);
+            StatementNode actual = Parser.parseStatement(text);
             assertThat("Got the correct statement node", actual, is(desired));
         }
     }
 
     private void doParseProgramTest(String[] texts, ProgramNode desired) {
         for (String text : texts) {
-            ProgramNode actual = Parser.parseProgram(ROOT_SCOPE, text);
+            ProgramNode actual = Parser.parseProgram(text);
             assertThat("Got the correct parse tree", actual, is(desired));
         }
-    }
-    
-    @Test
-    public void constantsTest() {
-        Scope rootScope = Scope.makeRootScope(Token.ID("ROOT"));
-        assertThat("Root scope is correct", ROOT_SCOPE, is(rootScope));
     }
 
     @Test
     public void exprTest1() {
-        SyntaxTree parsed = minus(rootConstant(12));
+        SyntaxTree parsed = minus(constant(12));
         String[] toParse = new String[] {
                 "-12",
                 "-(12)",
@@ -126,9 +106,8 @@ public class ParserTest {
     @Test
     public void exprTest2() {
         SyntaxTree exprTree2 = new BinOpNode(
-                ROOT_SCOPE,
-                rootConstant(1.1f),
-                minus(rootConstant(13)),
+                constant(1.1f),
+                minus(constant(13)),
                 Token.TIMES
         );
 
@@ -144,20 +123,16 @@ public class ParserTest {
     @Test
     public void exprTest3() {
         SyntaxTree exprTree3 = new BinOpNode(
-                ROOT_SCOPE,
-                rootConstant(1),
+                constant(1),
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new BinOpNode(
-                                ROOT_SCOPE,
-                                rootConstant(13),
-                                minus(rootConstant(1)),
+                                constant(13),
+                                minus(constant(1)),
                                 Token.TIMES
                         ),
                         new BinOpNode(
-                                ROOT_SCOPE,
-                                minus(rootConstant(1.12f)),
-                                minus(rootConstant(3)),
+                                minus(constant(1.12f)),
+                                minus(constant(3)),
                                 Token.MINUS
                         ),
                         Token.INT_DIVIDE
@@ -176,13 +151,10 @@ public class ParserTest {
     @Test
     public void exprTest4() {
         SyntaxTree exprTree4 = new UnaryOpNode(
-                ROOT_SCOPE,
                 new UnaryOpNode(
-                        ROOT_SCOPE,
                         new BinOpNode(
-                                ROOT_SCOPE,
-                                rootConstant(1),
-                                rootConstant(13.7f),
+                                constant(1),
+                                constant(13.7f),
                                 Token.MINUS
                         ),
                         Token.MINUS
@@ -201,7 +173,7 @@ public class ParserTest {
 
     @Test
     public void exprTest5() {
-        SyntaxTree exprTree5 = rootConstant(1.1f);
+        SyntaxTree exprTree5 = constant(1.1f);
 
         String[] exprText5 = new String[] {
                 "1.1",
@@ -214,14 +186,12 @@ public class ParserTest {
     @Test
     public void exprTest6() {
         SyntaxTree exprTree6 = new BinOpNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        rootConstant(1),
-                        rootConstant(2),
+                        constant(1),
+                        constant(2),
                         Token.MOD
                 ),
-                rootConstant(3),
+                constant(3),
                 Token.MOD
         );
 
@@ -236,14 +206,12 @@ public class ParserTest {
     @Test
     public void exprTest7() {
         SyntaxTree tree = new BinOpNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                        new VariableEvalNode(Token.ID("a")),
+                        new VariableEvalNode(Token.ID("b")),
                         Token.MOD
                 ),
-                rootConstant(12),
+                constant(12),
                 Token.PLUS
         );
 
@@ -259,9 +227,8 @@ public class ParserTest {
     public void exprTest8() {
         // it just has to parse, not evaluate reasonably
         SyntaxTree tree = new BinOpNode(
-                ROOT_SCOPE,
-                rootConstant(true),
-                rootConstant(false),
+                constant(true),
+                constant(false),
                 Token.PLUS
         );
 
@@ -277,9 +244,8 @@ public class ParserTest {
     @Test
     public void shortCircuitTest1() {
         SyntaxTree tree = new AndThenNode(
-                ROOT_SCOPE,
-                rootConstant(true),
-                rootConstant(false)
+                constant(true),
+                constant(false)
         );
 
         String[] text = new String[] {
@@ -296,9 +262,8 @@ public class ParserTest {
     @Test
     public void shortCircuitTest2() {
         SyntaxTree tree = new OrElseNode(
-                ROOT_SCOPE,
-                rootConstant(true),
-                rootConstant(false)
+                constant(true),
+                constant(false)
         );
 
         String[] text = new String[] {
@@ -316,16 +281,13 @@ public class ParserTest {
     public void boolExprTest1() {
         // tests NOT/OR/AND
         SyntaxTree tree = new BinOpNode(
-                ROOT_SCOPE,
-                rootConstant(true),
+                constant(true),
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new UnaryOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("someBool")),
+                                new VariableEvalNode(Token.ID("someBool")),
                                 Token.NOT
                         ),
-                        rootConstant(false),
+                        constant(false),
                         Token.OR
                 ),
                 Token.AND
@@ -340,18 +302,15 @@ public class ParserTest {
 
         // same, but checks operator precedence
         tree = new BinOpNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new UnaryOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("someBool")),
+                                new VariableEvalNode(Token.ID("someBool")),
                                 Token.NOT
                         ),
-                        rootConstant(false),
+                        constant(false),
                         Token.OR
                 ),
-                rootConstant(true),
+                constant(true),
                 Token.AND
         );
 
@@ -364,18 +323,15 @@ public class ParserTest {
 
         // same, but checks operator precedence
         tree = new BinOpNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new UnaryOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("someBool")),
+                                new VariableEvalNode(Token.ID("someBool")),
                                 Token.NOT
                         ),
-                        rootConstant(false),
+                        constant(false),
                         Token.AND
                 ),
-                rootConstant(true),
+                constant(true),
                 Token.OR
         );
 
@@ -390,16 +346,13 @@ public class ParserTest {
 
         // same, but checks operator precedence
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                rootConstant(true),
+                constant(true),
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new UnaryOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("someBool")),
+                                new VariableEvalNode(Token.ID("someBool")),
                                 Token.NOT
                         ),
-                        rootConstant(false),
+                        constant(false),
                         Token.AND
                 ),
                 Token.OR
@@ -425,12 +378,10 @@ public class ParserTest {
                 "a or else (b and c)",
         };
         tree = new OrElseNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
+                new VariableEvalNode(Token.ID("a")),
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.AND
                 )
         );
@@ -441,12 +392,10 @@ public class ParserTest {
                 "a or else (b or c)"
         };
         tree = new OrElseNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
+                new VariableEvalNode(Token.ID("a")),
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.OR
                 )
         );
@@ -457,12 +406,10 @@ public class ParserTest {
                 "a and then (b or c)"
         };
         tree = new AndThenNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
+                new VariableEvalNode(Token.ID("a")),
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.OR
                 )
         );
@@ -473,12 +420,10 @@ public class ParserTest {
                 "a and then (b and c)"
         };
         tree = new AndThenNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
+                new VariableEvalNode(Token.ID("a")),
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.AND
                 )
         );
@@ -495,9 +440,8 @@ public class ParserTest {
                 "a < b", "(a)<b", "(a<b)", "a<(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.LESS_THAN
         );
         doParseExpressionTest(text, tree);
@@ -506,9 +450,8 @@ public class ParserTest {
                 "a <= b", "(a)<=b", "(a<=b)", "a<=(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.LESS_THAN_OR_EQUALS
         );
         doParseExpressionTest(text, tree);
@@ -517,9 +460,8 @@ public class ParserTest {
                 "a <> b", "(a)<>b", "(a<>b)", "a<>(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.NOT_EQUALS
         );
         doParseExpressionTest(text, tree);
@@ -528,9 +470,8 @@ public class ParserTest {
                 "a > b", "(a)>b", "(a>b)", "a>(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.GREATER_THAN
         );
         doParseExpressionTest(text, tree);
@@ -539,9 +480,8 @@ public class ParserTest {
                 "a >= b", "(a)>=b", "(a>=b)", "a>=(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.GREATER_THAN_OR_EQUALS
         );
         doParseExpressionTest(text, tree);
@@ -550,9 +490,8 @@ public class ParserTest {
                 "a = b", "(a)=b", "(a=b)", "a=(b)"
         };
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                new VariableEvalNode(Token.ID("a")),
+                new VariableEvalNode(Token.ID("b")),
                 Token.EQUALS
         );
         doParseExpressionTest(text, tree);
@@ -571,12 +510,10 @@ public class ParserTest {
         };
 
         tree = new BinOpNode(
-                ROOT_SCOPE,
-                new UnaryOpNode(ROOT_SCOPE, new VariableEvalNode(ROOT_SCOPE, Token.ID("a")), Token.NOT),
+                new UnaryOpNode(new VariableEvalNode(Token.ID("a")), Token.NOT),
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("b")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.AND
                 ),
                 Token.PLUS
@@ -597,19 +534,16 @@ public class ParserTest {
                 "(a or b and c) or else d"
         };
         tree = new OrElseNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
+                        new VariableEvalNode(Token.ID("a")),
                         new BinOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                                new VariableEvalNode(Token.ID("b")),
+                                new VariableEvalNode(Token.ID("c")),
                                 Token.AND
                         ),
                         Token.OR
                 ),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("d"))
+                new VariableEvalNode(Token.ID("d"))
         );
         doParseExpressionTest(text, tree);
 
@@ -620,19 +554,16 @@ public class ParserTest {
                 "(a and b or c) or else d"
         };
         tree = new OrElseNode(
-                ROOT_SCOPE,
                 new BinOpNode(
-                        ROOT_SCOPE,
                         new BinOpNode(
-                                ROOT_SCOPE,
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("a")),
-                                new VariableEvalNode(ROOT_SCOPE, Token.ID("b")),
+                                new VariableEvalNode(Token.ID("a")),
+                                new VariableEvalNode(Token.ID("b")),
                                 Token.AND
                         ),
-                        new VariableEvalNode(ROOT_SCOPE, Token.ID("c")),
+                        new VariableEvalNode(Token.ID("c")),
                         Token.OR
                 ),
-                new VariableEvalNode(ROOT_SCOPE, Token.ID("d"))
+                new VariableEvalNode(Token.ID("d"))
         );
         doParseExpressionTest(text, tree);
     }
@@ -640,28 +571,25 @@ public class ParserTest {
     @Test
     public void ifStatementTest1() {
         Token<String> progName = Token.ID("testProg");
-        Scope programScope = ROOT_SCOPE.makeChildScope(progName);
-        ProgramNode programNode = new ProgramNode(ROOT_SCOPE, progName,
-                new BlockNode(programScope,
-                new DeclarationNode(programScope, list(), list()), // no declarations ...
-                new CompoundNode(programScope, list(
-                        new IfStatementNode(programScope,
-                                Parser.parseExpression(programScope, "1<2"),
-                                new NoOpNode(programScope),
+        ProgramNode programNode = new ProgramNode(progName,
+                new BlockNode(
+                        new DeclarationNode(list(), list()), // no declarations ...
+                        new CompoundNode(list(
                                 new IfStatementNode(
-                                        programScope,
-                                        Parser.parseExpression(programScope, "2<3"),
-                                        new NoOpNode(programScope),
+                                        Parser.parseExpression("1<2"),
+                                        new NoOpNode(),
                                         new IfStatementNode(
-                                                programScope,
-                                                Parser.parseExpression(programScope, "3<4"),
-                                                new NoOpNode(programScope),
-                                                new NoOpNode(programScope)
+                                                Parser.parseExpression("2<3"),
+                                                new NoOpNode(),
+                                                new IfStatementNode(
+                                                        Parser.parseExpression("3<4"),
+                                                        new NoOpNode(),
+                                                        new NoOpNode()
+                                                )
                                         )
                                 )
-                        )
-                ))
-        ));
+                        ))
+                ));
 
         String[] text = new String[] {
                 "program testProg {dnskdnsk};"
@@ -683,21 +611,19 @@ public class ParserTest {
     @Test
     public void ifStatementTest2() {
         Token<String> progName = Token.ID("testProg");
-        Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
-        ProgramNode programNode = new ProgramNode(ROOT_SCOPE, progName, new BlockNode(
-                insideScope,
-                new DeclarationNode(insideScope, list(), list()), // no declarations ...
-                new CompoundNode(insideScope, list(
-                        new IfStatementNode(insideScope,
-                                Parser.parseExpression(insideScope, "1<2"),
-                                new NoOpNode(insideScope),
-                                new IfStatementNode(insideScope,
-                                        Parser.parseExpression(insideScope, "2<3"),
-                                        new NoOpNode(insideScope),
-                                        new IfStatementNode(insideScope,
-                                                Parser.parseExpression(insideScope, "3<4"),
-                                                new NoOpNode(insideScope)
+        ProgramNode programNode = new ProgramNode(progName, new BlockNode(
+                new DeclarationNode(list(), list()), // no declarations ...
+                new CompoundNode(list(
+                        new IfStatementNode(
+                                Parser.parseExpression("1<2"),
+                                new NoOpNode(),
+                                new IfStatementNode(
+                                        Parser.parseExpression("2<3"),
+                                        new NoOpNode(),
+                                        new IfStatementNode(
+                                                Parser.parseExpression("3<4"),
+                                                new NoOpNode()
                                         )
                                 )
                         )
@@ -722,18 +648,17 @@ public class ParserTest {
     @Test
     public void ifStatementTest3() {
         Token<String> progName = Token.ID("testProg");
-        Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
-        ProgramNode programNode = new ProgramNode(ROOT_SCOPE, progName, new BlockNode(insideScope,
-                new DeclarationNode(insideScope, list(), list()), // no declarations ...
-                new CompoundNode(insideScope, list(
-                        new IfStatementNode(insideScope,
-                                Parser.parseExpression(insideScope, "1<2"),
-                                new IfStatementNode(insideScope,
-                                        Parser.parseExpression(insideScope, "2<3"),
-                                        new NoOpNode(insideScope),
-                                        new NoOpNode(insideScope)
+        ProgramNode programNode = new ProgramNode(progName, new BlockNode(
+                new DeclarationNode(list(), list()), // no declarations ...
+                new CompoundNode(list(
+                        new IfStatementNode(
+                                Parser.parseExpression("1<2"),
+                                new IfStatementNode(
+                                        Parser.parseExpression("2<3"),
+                                        new NoOpNode(),
+                                        new NoOpNode()
                                 ),
-                                new NoOpNode(insideScope)
+                                new NoOpNode()
                         )
                 ))
         ));
@@ -775,7 +700,8 @@ public class ParserTest {
             doParseProgramTest(text, programNode);
             assertThat("Shouldn't have gotten here", true, is(false));
         } catch (UnexpectedTokenException ise) {
-            assertThat(ise.getMessage(), is(String.format("Unexpected token type %s", Token.Type.ELSE.name())));
+            assertThat(ise.getMessage(),
+                    is(String.format("Unexpected token type %s", Token.Type.ELSE.name())));
         }
     }
 
@@ -793,19 +719,19 @@ public class ParserTest {
                 "(1>3+2)>(3*4)"
         };
 
-        tree = new BinOpNode(ROOT_SCOPE,
-                new BinOpNode(ROOT_SCOPE,
-                        rootConstant(1),
-                        new BinOpNode(ROOT_SCOPE,
-                                rootConstant(3),
-                                rootConstant(2),
+        tree = new BinOpNode(
+                new BinOpNode(
+                        constant(1),
+                        new BinOpNode(
+                                constant(3),
+                                constant(2),
                                 Token.PLUS
                         ),
                         Token.GREATER_THAN
                 ),
-                new BinOpNode(ROOT_SCOPE,
-                        rootConstant(3),
-                        rootConstant(4),
+                new BinOpNode(
+                        constant(3),
+                        constant(4),
                         Token.TIMES
                 ),
                 Token.GREATER_THAN
@@ -817,16 +743,13 @@ public class ParserTest {
     @Test
     public void progTest1() {
         Token<String> progName = Token.ID("test1");
-        Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
         // standard empty program
         ProgramNode progTree1 = new ProgramNode(
-                ROOT_SCOPE,
                 progName,
                 new BlockNode(
-                        insideScope,
-                        new DeclarationNode(insideScope, Collections.emptyList(), Collections.emptyList()),
-                        new CompoundNode(insideScope, list(new NoOpNode(insideScope)))
+                        new DeclarationNode(Collections.emptyList(), Collections.emptyList()),
+                        new CompoundNode(list(new NoOpNode()))
                 )
         );
         String[] progText1 = new String[] {
@@ -839,28 +762,27 @@ public class ParserTest {
     @Test
     public void progTest2() {
         Token<String> progName = Token.ID("test2");
-        Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
         // declare some variables, do nothing
         ProgramNode progTree2 = new ProgramNode(
-                ROOT_SCOPE, progName,
-                new BlockNode(insideScope,
-                        new DeclarationNode(insideScope,
+                progName,
+                new BlockNode(
+                        new DeclarationNode(
                                 list(
-                                        new VariableDeclarationNode(insideScope,
+                                        new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("number"),
                                                         Token.ID("other_number")),
                                                 TypeSpec.INTEGER),
-                                        new VariableDeclarationNode(insideScope,
+                                        new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("ril"), Token.ID("_r")),
                                                 TypeSpec.REAL),
-                                        new VariableDeclarationNode(insideScope,
+                                        new VariableDeclarationNode(
                                                 ImmutableList.of(Token.ID("a")),
                                                 TypeSpec.INTEGER)
                                 ),
                                 Collections.emptyList() // no procedures
                         ),
-                        new CompoundNode(insideScope, list(new NoOpNode(insideScope)))
+                        new CompoundNode(list(new NoOpNode()))
                 )
         );
         String[] progText2 = new String[] {
@@ -875,46 +797,45 @@ public class ParserTest {
     @Test
     public void progTest3() {
         Token<String> progName = Token.ID("test3");
-        Scope insideScope = ROOT_SCOPE.makeChildScope(progName);
 
-        ProgramNode progTree3 = new ProgramNode(ROOT_SCOPE, progName, new BlockNode(insideScope,
-                new DeclarationNode(insideScope,
+        ProgramNode progTree3 = new ProgramNode(progName, new BlockNode(
+                new DeclarationNode(
                         list(
-                                new VariableDeclarationNode(insideScope,varList("a"), TypeSpec.INTEGER),
-                                new VariableDeclarationNode(insideScope,varList("b"), TypeSpec.REAL)
+                                new VariableDeclarationNode(varList("a"), TypeSpec.INTEGER),
+                                new VariableDeclarationNode(varList("b"), TypeSpec.REAL)
                         ),
                         Collections.emptyList() // no procedures
                 ),
-                new CompoundNode(insideScope, list(
-                        new AssignNode(insideScope,
-                                new VariableAssignNode(insideScope,Token.ID("a")),
-                                new BinOpNode(insideScope,
-                                        new BinOpNode(insideScope,
-                                                constant(insideScope,12),
-                                                minus(constant(insideScope,12)),
+                new CompoundNode(list(
+                        new AssignNode(
+                                new VariableAssignNode(Token.ID("a")),
+                                new BinOpNode(
+                                        new BinOpNode(
+                                                constant(12),
+                                                minus(constant(12)),
                                                 Token.TIMES
                                         ),
-                                        constant(insideScope,4),
+                                        constant(4),
                                         Token.PLUS
                                 )
                         ),
-                        new AssignNode(insideScope,
-                                new VariableAssignNode(insideScope,Token.ID("b")),
-                                new BinOpNode(insideScope,
-                                        constant(insideScope,1),
-                                        new BinOpNode(insideScope,
-                                                constant(insideScope,12),
-                                                new VariableEvalNode(insideScope,Token.ID("a")),
+                        new AssignNode(
+                                new VariableAssignNode(Token.ID("b")),
+                                new BinOpNode(
+                                        constant(1),
+                                        new BinOpNode(
+                                                constant(12),
+                                                new VariableEvalNode(Token.ID("a")),
                                                 Token.TIMES
                                         ),
                                         Token.MINUS
                                 )
                         ),
-                        new AssignNode(insideScope,
-                                new VariableAssignNode(insideScope,Token.ID("a")),
-                                constant(insideScope,1)
+                        new AssignNode(
+                                new VariableAssignNode(Token.ID("a")),
+                                constant(1)
                         ),
-                        new NoOpNode(insideScope)
+                        new NoOpNode()
                 ))
         ));
         String[] progText3 = new String[] {
@@ -931,50 +852,62 @@ public class ParserTest {
     @Test
     public void progTest4() {
         Token<String> progName = Token.ID("test4");
-        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
-
         Token<String> procName = Token.ID("proc1");
-        Scope procedureScope = progScope.makeChildScope(procName);
 
-        ProgramNode progTree4 = new ProgramNode(ROOT_SCOPE,
-                progName,
-                new BlockNode(progScope,
-                        new DeclarationNode(progScope,
+        ProgramNode progTree4 = new ProgramNode(progName,
+                new BlockNode(
+                        new DeclarationNode(
                                 ImmutableList.of(
-                                        new VariableDeclarationNode(progScope, ImmutableList.of(Token.ID("a")), TypeSpec.INTEGER),
-                                        new VariableDeclarationNode(progScope, ImmutableList.of(Token.ID("b"), Token.ID("c")), TypeSpec.REAL)
+                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")),
+                                                TypeSpec.INTEGER),
+                                        new VariableDeclarationNode(
+                                                ImmutableList.of(Token.ID("b"), Token.ID("c")),
+                                                TypeSpec.REAL)
                                 ),
                                 ImmutableList.of(
-                                        new ProcedureDeclarationNode(progScope,
-                                                procName,
-                                                new BlockNode(procedureScope,
-                                                        new DeclarationNode(procedureScope,
+                                        new ProcedureDeclarationNode(procName,
+                                                new BlockNode(
+                                                        new DeclarationNode(
                                                                 ImmutableList.of(
-                                                                        new VariableDeclarationNode(procedureScope, ImmutableList.of(Token.ID("a")), TypeSpec.REAL),
-                                                                        new VariableDeclarationNode(procedureScope, ImmutableList.of(Token.ID("d")), TypeSpec.REAL)
+                                                                        new VariableDeclarationNode(
+                                                                                ImmutableList
+                                                                                        .of(Token
+                                                                                                .ID("a")),
+                                                                                TypeSpec.REAL),
+                                                                        new VariableDeclarationNode(
+                                                                                ImmutableList
+                                                                                        .of(Token
+                                                                                                .ID("d")),
+                                                                                TypeSpec.REAL)
                                                                 ),
                                                                 ImmutableList.of()
                                                         ),
-                                                        new CompoundNode(procedureScope,ImmutableList.of(
-                                                                new AssignNode(procedureScope,new VariableAssignNode(procedureScope,Token.ID("a")), constant(procedureScope,1)),
-                                                                new AssignNode(procedureScope,new VariableAssignNode(procedureScope,Token.ID("d")), constant(procedureScope,4))
+                                                        new CompoundNode(ImmutableList.of(
+                                                                new AssignNode(
+                                                                        new VariableAssignNode(
+                                                                                Token.ID("a")),
+                                                                        constant(1)),
+                                                                new AssignNode(
+                                                                        new VariableAssignNode(
+                                                                                Token.ID("d")),
+                                                                        constant(4))
                                                         ))
                                                 )
                                         )
                                 )
                         ),
-                        new CompoundNode(progScope, ImmutableList.of(
-                                new AssignNode(progScope,
-                                        new VariableAssignNode(progScope, Token.ID("a")),
-                                        constant(progScope, 1)
+                        new CompoundNode(ImmutableList.of(
+                                new AssignNode(
+                                        new VariableAssignNode(Token.ID("a")),
+                                        constant(1)
                                 ),
-                                new AssignNode(progScope,
-                                        new VariableAssignNode(progScope, Token.ID("b")),
-                                        constant(progScope, 2.0f)
+                                new AssignNode(
+                                        new VariableAssignNode(Token.ID("b")),
+                                        constant(2.0f)
                                 ),
-                                new AssignNode(progScope,
-                                        new VariableAssignNode(progScope, Token.ID("c")),
-                                        constant(progScope, 3)
+                                new AssignNode(
+                                        new VariableAssignNode(Token.ID("c")),
+                                        constant(3)
                                 )
                         ))
                 )
@@ -997,30 +930,29 @@ public class ParserTest {
     @Test
     public void progTest5() {
         Token<String> progName = Token.ID("test5");
-        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
 
-        SyntaxTree progTree5 = new ProgramNode(ROOT_SCOPE, Token.ID("test5"), new BlockNode(progScope,
-                new DeclarationNode(progScope,
+        SyntaxTree progTree5 = new ProgramNode(Token.ID("test5"), new BlockNode(
+                new DeclarationNode(
                         list(
-                                new VariableDeclarationNode(progScope, varList("a", "b"), TypeSpec.BOOLEAN),
-                                new VariableDeclarationNode(progScope, varList("c"), TypeSpec.BOOLEAN),
-                                new VariableDeclarationNode(progScope, varList("d"), TypeSpec.REAL)
+                                new VariableDeclarationNode(varList("a", "b"), TypeSpec.BOOLEAN),
+                                new VariableDeclarationNode(varList("c"), TypeSpec.BOOLEAN),
+                                new VariableDeclarationNode(varList("d"), TypeSpec.REAL)
                         ), list() // no procedures here
                 ),
-                new CompoundNode(progScope, list(
-                        new AssignNode(progScope, new VariableAssignNode(progScope, Token.ID("a")), rootConstant(true)),
-                        new AssignNode(progScope, new VariableAssignNode(progScope, Token.ID("b")), rootConstant(false)),
-                        new AssignNode(progScope,
-                                new VariableAssignNode(progScope, Token.ID("c")),
-                                new BinOpNode(progScope,
-                                        new VariableEvalNode(progScope, Token.ID("a")),
-                                        new VariableEvalNode(progScope, Token.ID("b")),
+                new CompoundNode(list(
+                        new AssignNode(new VariableAssignNode(Token.ID("a")), constant(true)),
+                        new AssignNode(new VariableAssignNode(Token.ID("b")), constant(false)),
+                        new AssignNode(
+                                new VariableAssignNode(Token.ID("c")),
+                                new BinOpNode(
+                                        new VariableEvalNode(Token.ID("a")),
+                                        new VariableEvalNode(Token.ID("b")),
                                         Token.PLUS
                                 )
                         ),
-                        new AssignNode(progScope,
-                                new VariableAssignNode(progScope, Token.ID("d")),
-                                new VariableEvalNode(progScope, Token.ID("yes")))
+                        new AssignNode(
+                                new VariableAssignNode(Token.ID("d")),
+                                new VariableEvalNode(Token.ID("yes")))
                 ))
         ));
 
@@ -1039,85 +971,79 @@ public class ParserTest {
     public void procCallTest1() {
         String proc1Text = "procedure proc1; var a: Real; begin a := 12; b := 3; end;";
         String proc2Text = "procedure proc2; var b: Integer; begin a:= 1; b := 3; end;";
-        String proc3Text = "procedure proc3; var b: Integer; c: Boolean; begin c := True; if c then a := 3 else b := 3 end;";
+        String proc3Text =
+                "procedure proc3; var b: Integer; c: Boolean; begin c := True; if c then a := 3 else b := 3 end;";
         String progText = String.format(
                 "program test1; var a, b: Integer; %s %s %s begin proc1(); proc1(); proc2(); proc3() end.",
                 proc1Text, proc2Text, proc3Text
         );
 
         Token<String> progName = Token.ID("test1");
-        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
 
         // we already believe we can parse procedure definitions from earlier tests, no need
         // to type them all out again
         Token<String> proc1Name = Token.ID("proc1");
-        ProcedureDeclarationNode proc1Node = Parser.parseProcedure(progScope, proc1Text);
+        ProcedureDeclarationNode proc1Node = Parser.parseProcedure(proc1Text);
 
         Token<String> proc2Name = Token.ID("proc2");
-        ProcedureDeclarationNode proc2Node = Parser.parseProcedure(progScope, proc2Text);
+        ProcedureDeclarationNode proc2Node = Parser.parseProcedure(proc2Text);
 
         Token<String> proc3Name = Token.ID("proc3");
-        ProcedureDeclarationNode proc3Node = Parser.parseProcedure(progScope, proc3Text);
+        ProcedureDeclarationNode proc3Node = Parser.parseProcedure(proc3Text);
 
         ProgramNode desired = new ProgramNode(
-                ROOT_SCOPE, progName,
+                progName,
                 new BlockNode(
-                        progScope,
                         new DeclarationNode(
-                                progScope,
-                                list(new VariableDeclarationNode(progScope, list(Token.ID("a"), Token.ID("b")), TypeSpec.INTEGER)),
+                                list(new VariableDeclarationNode(list(Token.ID("a"), Token.ID("b")),
+                                        TypeSpec.INTEGER)),
                                 list(proc1Node, proc2Node, proc3Node)
                         ),
                         new CompoundNode(
-                                progScope,
                                 list(
-                                        new ProcedureCallNode(progScope, proc1Name),
-                                        new ProcedureCallNode(progScope, proc1Name),
-                                        new ProcedureCallNode(progScope, proc2Name),
-                                        new ProcedureCallNode(progScope, proc3Name)
+                                        new ProcedureCallNode(proc1Name),
+                                        new ProcedureCallNode(proc1Name),
+                                        new ProcedureCallNode(proc2Name),
+                                        new ProcedureCallNode(proc3Name)
                                 )
                         )
                 )
         );
 
-        doParseProgramTest(new String[] { progText }, desired);
+        doParseProgramTest(new String[] {progText}, desired);
     }
 
     @Test
     public void whileLoopTest1() {
         String whileText = "while 1<2 do a:=1";
         WhileNode desired = new WhileNode(
-                ROOT_SCOPE,
-                Parser.parseExpression(ROOT_SCOPE, "1<2"),
-                Parser.parseStatement(ROOT_SCOPE, "a := 1")
+                Parser.parseExpression("1<2"),
+                Parser.parseStatement("a := 1")
         );
-        doParseStatementTest(new String[] { whileText }, desired);
+        doParseStatementTest(new String[] {whileText}, desired);
     }
 
     @Test
     public void whileLoopTest2() {
         String whileText = "while ((1<2) and (a>=b)) do while c<d do begin a:= 2; int:=3.2 end";
         WhileNode desired = new WhileNode(
-                ROOT_SCOPE,
-                Parser.parseExpression(ROOT_SCOPE, "((1<2) and (a>=b))"),
+                Parser.parseExpression("((1<2) and (a>=b))"),
                 new WhileNode(
-                        ROOT_SCOPE,
-                        Parser.parseExpression(ROOT_SCOPE, "c<d"),
-                        Parser.parseStatement(ROOT_SCOPE, "begin a:= 2; int:=3.2 end")
+                        Parser.parseExpression("c<d"),
+                        Parser.parseStatement("begin a:= 2; int:=3.2 end")
                 )
         );
-        doParseStatementTest(new String[] { whileText }, desired);
+        doParseStatementTest(new String[] {whileText}, desired);
     }
 
     @Test
     public void doUntilLoopTest1() {
         String loopText = "do a := 1 until 1<2";
         DoUntilNode desired = new DoUntilNode(
-                ROOT_SCOPE,
-                Parser.parseExpression(ROOT_SCOPE, "1<2"),
-                Parser.parseStatement(ROOT_SCOPE, "a:=1")
+                Parser.parseExpression("1<2"),
+                Parser.parseStatement("a:=1")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
@@ -1134,56 +1060,50 @@ public class ParserTest {
          */
         String loopText = "do do while 1<2 do b := -12 until false until true";
         DoUntilNode desired = new DoUntilNode(
-                ROOT_SCOPE,
-                Parser.parseExpression(ROOT_SCOPE, "true"),
+                Parser.parseExpression("true"),
                 new DoUntilNode(
-                        ROOT_SCOPE,
-                        Parser.parseExpression(ROOT_SCOPE, "false"),
-                        Parser.parseStatement(ROOT_SCOPE, "while 1 < 2 do b := -12")
+                        Parser.parseExpression("false"),
+                        Parser.parseStatement("while 1 < 2 do b := -12")
                 )
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
     public void loopControlTest1() {
         String loopText = "do begin break; continue; a := 12 end until 2 = 1";
         DoUntilNode desired = new DoUntilNode(
-                ROOT_SCOPE,
-                Parser.parseExpression(ROOT_SCOPE, "2=1"),
+                Parser.parseExpression("2=1"),
                 new CompoundNode(
-                        ROOT_SCOPE,
                         list(
-                                LoopControlNode.Break(ROOT_SCOPE),
-                                LoopControlNode.Continue(ROOT_SCOPE),
-                                Parser.parseStatement(ROOT_SCOPE, "a:=12")
+                                LoopControlNode.Break(),
+                                LoopControlNode.Continue(),
+                                Parser.parseStatement("a:=12")
                         )
                 )
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
     public void forLoopTest1() {
         String loopText = "for a:=30+12-pro to 12-6*b do begin end";
         ForNode desired = ForNode.Forward(
-                ROOT_SCOPE,
-                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
-                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
-                Parser.parseStatement(ROOT_SCOPE, "begin end")
+                (AssignNode) Parser.parseStatement("a:= 30+12-pro"),
+                Parser.parseExpression("12-6*b"),
+                Parser.parseStatement("begin end")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
     public void forLoopTest2() {
         String loopText = "for a:=30+12-pro downto 12-6*b do begin end";
         ForNode desired = ForNode.Backward(
-                ROOT_SCOPE,
-                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
-                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
-                Parser.parseStatement(ROOT_SCOPE, "begin end")
+                (AssignNode) Parser.parseStatement("a:= 30+12-pro"),
+                Parser.parseExpression("12-6*b"),
+                Parser.parseStatement("begin end")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 }

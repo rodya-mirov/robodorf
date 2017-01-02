@@ -1,7 +1,6 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 
 import java.util.Objects;
 
@@ -11,9 +10,7 @@ import java.util.Objects;
 public final class VariableAssignNode extends SyntaxTree {
     public final Token<String> idToken;
 
-    public VariableAssignNode(Scope scope, Token<String> idToken) {
-        super(scope);
-
+    public VariableAssignNode(Token<String> idToken) {
         if (idToken == null || idToken.type != Token.Type.ID) {
             throw new IllegalArgumentException("idToken must be nonnull and of type ID");
         }
@@ -36,5 +33,12 @@ public final class VariableAssignNode extends SyntaxTree {
 
         return Objects.equals(this.idToken, other.idToken)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + idToken.hashCode();
+        return out;
     }
 }

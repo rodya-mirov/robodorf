@@ -3,7 +3,6 @@ package io.github.rodyamirov.tree;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueOps;
 
@@ -28,9 +27,7 @@ public final class UnaryOpNode extends ExpressionNode {
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 
 
-    public UnaryOpNode(Scope scope, ExpressionNode child, Token opToken) {
-        super(scope);
-
+    public UnaryOpNode(ExpressionNode child, Token opToken) {
         if (child == null || opToken == null) {
             throw new IllegalArgumentException("All arguments must be non-null");
         } else if (!allowedOpTypes.contains(opToken.type)) {
@@ -61,5 +58,13 @@ public final class UnaryOpNode extends ExpressionNode {
         return Objects.equals(this.opToken, other.opToken)
                 && Objects.equals(this.child, other.child)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + opToken.hashCode();
+        out = 43 * out + child.hashCode();
+        return out;
     }
 }

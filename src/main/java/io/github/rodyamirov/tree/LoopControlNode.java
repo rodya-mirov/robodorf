@@ -1,7 +1,5 @@
 package io.github.rodyamirov.tree;
 
-import io.github.rodyamirov.symbols.Scope;
-
 import java.util.Objects;
 
 /**
@@ -9,22 +7,21 @@ import java.util.Objects;
  *
  * Created by richard.rast on 12/30/16.
  */
-public class LoopControlNode extends StatementNode {
+public final class LoopControlNode extends StatementNode {
     public enum Type { CONTINUE, BREAK }
 
     public final Type type;
 
-    private LoopControlNode(Scope scope, Type type) {
-        super(scope);
+    private LoopControlNode(Type type) {
         this.type = type;
     }
 
-    public static LoopControlNode Continue(Scope scope) {
-        return new LoopControlNode(scope, Type.CONTINUE);
+    public static LoopControlNode Continue() {
+        return new LoopControlNode(Type.CONTINUE);
     }
 
-    public static LoopControlNode Break(Scope scope) {
-        return new LoopControlNode(scope, Type.BREAK);
+    public static LoopControlNode Break() {
+        return new LoopControlNode(Type.BREAK);
     }
 
     @Override
@@ -34,13 +31,13 @@ public class LoopControlNode extends StatementNode {
         }
 
         LoopControlNode other = (LoopControlNode)o;
-        return Objects.equals(this.scope, other.scope)
-                && Objects.equals(this.type, other.type);
+        return Objects.equals(this.type, other.type)
+                && Objects.equals(this.scope, other.scope);
     }
 
     @Override
     public int hashCode() {
-        return 43 * scope.hashCode() + type.hashCode();
+        return 43 * Objects.hashCode(scope) + type.hashCode();
     }
 
     @Override

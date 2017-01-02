@@ -1,7 +1,6 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 
 import java.util.Objects;
 
@@ -11,8 +10,7 @@ import java.util.Objects;
 public final class ProcedureCallNode extends StatementNode {
     public final Token<String> procedureName;
 
-    public ProcedureCallNode(Scope scope, Token<String> procedureName) {
-        super(scope);
+    public ProcedureCallNode(Token<String> procedureName) {
         this.procedureName = procedureName;
     }
 
@@ -34,6 +32,6 @@ public final class ProcedureCallNode extends StatementNode {
 
     @Override
     public int hashCode() {
-        return scope.hashCode() * 43 + procedureName.hashCode();
+        return Objects.hashCode(scope) * 43 + procedureName.hashCode();
     }
 }

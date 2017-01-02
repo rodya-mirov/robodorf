@@ -3,19 +3,18 @@ package io.github.rodyamirov.eval;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.parse.Parser;
 import io.github.rodyamirov.symbols.Scope;
+import io.github.rodyamirov.symbols.ScopeAssigner;
 import io.github.rodyamirov.symbols.SymbolTable;
 import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
-import io.github.rodyamirov.tree.AssignNode;
 import io.github.rodyamirov.tree.ExpressionNode;
-import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import org.junit.Test;
 
-import static io.github.rodyamirov.parse.Parser.ROOT_SCOPE;
+import static io.github.rodyamirov.symbols.ScopeAssigner.ROOT_SCOPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -24,7 +23,8 @@ import static org.hamcrest.core.Is.is;
  */
 public class EvalVisitorTest {
     private void doExpressionTest(String toParse, SymbolTable symbolTable, SymbolValue desiredAnswer) {
-        ExpressionNode parseTree = Parser.parseExpression(ROOT_SCOPE, toParse);
+        ExpressionNode parseTree = Parser.parseExpression(toParse);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, parseTree);
         SymbolValue actualAnswer = EvalVisitor.evaluateExpression(parseTree, symbolTable);
         assertThat("Expression was correctly evaluated", actualAnswer, is(desiredAnswer));
     }
@@ -42,14 +42,28 @@ public class EvalVisitorTest {
     }
 
     private void doProgramTest(String toParse, SymbolValueTable desiredEndState) {
-        ProgramNode parseTree = Parser.parseProgram(ROOT_SCOPE, toParse);
+        ProgramNode parseTree = Parser.parseProgram(toParse);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, parseTree);
         SymbolTable symbolTable = SymbolTableBuilder.buildFrom(parseTree);
         SymbolValueTable actualEndState = EvalVisitor.evaluateProgram(parseTree, symbolTable);
         assertThat("State at the end was correct", actualEndState, is(desiredEndState));
     }
 
+    private SymbolValue<ProgramNode> makeProgram(Scope rootScope, String progText) {
+        ProgramNode programNode = Parser.parseProgram(progText);
+        ScopeAssigner.assignScopes(rootScope, programNode);
+        return SymbolValue.make(TypeSpec.PROGRAM, programNode);
+    }
+
+    private SymbolValue<ProcedureDeclarationNode> makeProcedure(Scope rootScope, String procedureText) {
+        ProcedureDeclarationNode procedureDeclarationNode = Parser.parseProcedure(procedureText);
+        ScopeAssigner.assignScopes(rootScope, procedureDeclarationNode);
+        return SymbolValue.make(TypeSpec.PROCEDURE, procedureDeclarationNode);
+    }
+
     private SymbolTable makeSymbolTable(String programText) {
         ProgramNode programNode = Parser.parseProgram(programText);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
         return SymbolTableBuilder.buildFrom(programNode);
     }
 
@@ -173,7 +187,7 @@ public class EvalVisitorTest {
                 + " end .";
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progName = Token.ID("_te");
@@ -187,7 +201,7 @@ public class EvalVisitorTest {
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progName = Token.ID("_3GBB");
@@ -200,7 +214,7 @@ public class EvalVisitorTest {
                 + "end.";
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
     }
 
@@ -218,7 +232,7 @@ public class EvalVisitorTest {
                 + "; end .";
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 1));
-        desired.setValue(ROOT_SCOPE, Token.ID("NAME"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, Token.ID("NAME"), makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progScope = ROOT_SCOPE.makeChildScope(Token.ID("DEP"));
@@ -231,7 +245,7 @@ public class EvalVisitorTest {
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("_ab"), SymbolValue.make(TypeSpec.INTEGER, 25));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 13));
-        desired.setValue(ROOT_SCOPE, Token.ID("DEP"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, Token.ID("DEP"), makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progScope = ROOT_SCOPE.makeChildScope(Token.ID("S_"));
@@ -243,7 +257,7 @@ public class EvalVisitorTest {
                 + "  ;; ;;  end.";
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("Int"), SymbolValue.make(TypeSpec.INTEGER, 7));
-        desired.setValue(ROOT_SCOPE, Token.ID("S_"), SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, Token.ID("S_"), makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
     }
 
@@ -259,7 +273,7 @@ public class EvalVisitorTest {
         prog = "program t1; "
                 + "Begin end.";
         desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progName = Token.ID("t1");
@@ -267,7 +281,7 @@ public class EvalVisitorTest {
         prog = "program t1; "
                 + "Begin end.";
         desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progName = Token.ID("t2");
@@ -278,7 +292,7 @@ public class EvalVisitorTest {
         desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 5));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
 
         progName = Token.ID("t3");
@@ -291,7 +305,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 0));
         desired.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 1));
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.INTEGER, 0));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         doProgramTest(prog, desired);
     }
 
@@ -308,7 +322,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 2));
         desired.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.REAL, 3.0f));
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 4.0f));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -325,8 +339,8 @@ public class EvalVisitorTest {
                 + "end.";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 1.25f));
-        desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4*1.25f*1.25f+4));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4 * 1.25f * 1.25f + 4));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -350,7 +364,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("e"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -379,7 +393,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -395,7 +409,8 @@ public class EvalVisitorTest {
                 + " a := 2; b:= 3.1; c := 12; d := c*c-4;"
                 //  e := a < b or c < d;  <-- doesn't work; in pascal or's precedence is way too high and does "b or c"
                 + " e := a<b or else c<d;"         // true
-                + " f := a=b and then g;"          // true; note g not being defined isn't a problem because of short circuiting
+                + " f := a=b and then g;"
+                // true; note g not being defined isn't a problem because of short circuiting
                 + " g := a > 5 or else not (b < c);"  // false
                 + " h := a >= 12 or else b <= 2 or else (c=12 and then d = c*c-4) " // true
                 + "end {the whole thing{nested} syntax error! nope} .";
@@ -409,7 +424,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("f"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("g"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("h"), SymbolValue.make(TypeSpec.BOOLEAN, true));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -431,7 +446,7 @@ public class EvalVisitorTest {
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -453,7 +468,7 @@ public class EvalVisitorTest {
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -485,7 +500,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, false));
         desired.setValue(progScope, Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -517,7 +532,7 @@ public class EvalVisitorTest {
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("a2"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 12));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
     }
@@ -544,8 +559,8 @@ public class EvalVisitorTest {
                 + " proc1();"
                 + "end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
-        desired.setValue(progScope, procName, SymbolValue.make(TypeSpec.PROCEDURE, Parser.parseProcedure(progScope, procText)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
+        desired.setValue(progScope, procName, makeProcedure(progScope, procText));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
         doProgramTest(prog, desired);
     }
@@ -572,8 +587,8 @@ public class EvalVisitorTest {
                 + " proc1();"
                 + "end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
-        desired.setValue(progScope, procName, SymbolValue.make(TypeSpec.PROCEDURE, Parser.parseProcedure(progScope, procText)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
+        desired.setValue(progScope, procName, makeProcedure(progScope, procText));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
         doProgramTest(prog, desired);
     }
@@ -595,7 +610,7 @@ public class EvalVisitorTest {
                 + "         end"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
         doProgramTest(prog, desired);
     }
@@ -617,7 +632,7 @@ public class EvalVisitorTest {
                 + "         end"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
         doProgramTest(prog, desired);
     }
@@ -639,7 +654,7 @@ public class EvalVisitorTest {
                 + "         end"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
         doProgramTest(prog, desired);
     }
@@ -661,7 +676,7 @@ public class EvalVisitorTest {
                 + "         end"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
         doProgramTest(prog, desired);
     }
@@ -684,7 +699,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
         doProgramTest(prog, desired);
     }
@@ -707,7 +722,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
         doProgramTest(prog, desired);
     }
@@ -732,7 +747,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
         doProgramTest(prog, desired);
     }
@@ -762,7 +777,7 @@ public class EvalVisitorTest {
                 + "     until true" // not much of a loop
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
         desired.setValue(progScope, Token.ID("good"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("bad"), SymbolValue.make(TypeSpec.BOOLEAN, false));
@@ -787,7 +802,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
         doProgramTest(prog, desired);
     }
@@ -810,7 +825,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
         doProgramTest(prog, desired);
     }
@@ -835,7 +850,7 @@ public class EvalVisitorTest {
                 + "     until (a<0) or (a>30)"
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
         doProgramTest(prog, desired);
     }
@@ -865,7 +880,7 @@ public class EvalVisitorTest {
                 + "     until true" // not much of a loop
                 + " end .";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
-        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
         desired.setValue(progScope, Token.ID("good"), SymbolValue.make(TypeSpec.BOOLEAN, true));
         desired.setValue(progScope, Token.ID("bad"), SymbolValue.make(TypeSpec.BOOLEAN, false));
@@ -891,7 +906,7 @@ public class EvalVisitorTest {
         Token<String> progName = Token.ID("a");
         Scope progScope = ROOT_SCOPE.makeChildScope(progName);
         SymbolValueTable symbolValueTable = new SymbolValueTable(makeSymbolTable(progText));
-        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(progText)));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, progText));
         symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 10));
         symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 30));
         symbolValueTable.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 14));
@@ -913,7 +928,7 @@ public class EvalVisitorTest {
                 + "     um()" // one statement loop
                 + "end .";
 
-        ProgramNode programNode = Parser.parseProgram(prog);
+        ProgramNode programNode = makeProgram(ROOT_SCOPE, prog).value;
         SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
 
         try {
@@ -930,7 +945,7 @@ public class EvalVisitorTest {
                 + " begin while true do break end;"
                 + "begin um() end .";
 
-        programNode = Parser.parseProgram(prog);
+        programNode = makeProgram(ROOT_SCOPE, prog).value;
         symbolTable = SymbolTableBuilder.buildFrom(programNode);
 
         // no error needed
@@ -950,7 +965,7 @@ public class EvalVisitorTest {
                 + "     um()" // one statement loop
                 + "end .";
 
-        ProgramNode programNode = Parser.parseProgram(prog);
+        ProgramNode programNode = makeProgram(ROOT_SCOPE, prog).value;
         SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
 
         try {
@@ -969,7 +984,7 @@ public class EvalVisitorTest {
                 + " um()"
                 + "end .";
 
-        programNode = Parser.parseProgram(prog);
+        programNode = makeProgram(ROOT_SCOPE, prog).value;
         symbolTable = SymbolTableBuilder.buildFrom(programNode);
         EvalVisitor.evaluateProgram(programNode, symbolTable);
     }
@@ -992,25 +1007,25 @@ public class EvalVisitorTest {
         Scope procScope4 = procScope3.makeChildScope(procName4);
 
         String procText2 = "procedure proc_2; var a, b: Integer; begin a := 1; c := c+a+1; end;";
-        ProcedureDeclarationNode procNode2 = Parser.parseProcedure(procScope1, procText2);
+        ProcedureDeclarationNode procNode2 = makeProcedure(procScope1, procText2).value;
 
         String procText1 = String.format( // in the end, the effect is: a += 17
                 "procedure proc_1; var c: Real; %s begin c:= 12; proc_2(); proc_2(); a := a+c+1; end;",
                 procText2);
-        ProcedureDeclarationNode procNode1 = Parser.parseProcedure(progScope, procText1);
+        ProcedureDeclarationNode procNode1 = makeProcedure(progScope, procText1).value;
 
         String procText4 = "procedure proc_4; var c: Real; begin c := 12; end;";
-        ProcedureDeclarationNode procNode4 = Parser.parseProcedure(procScope3, procText4);
+        ProcedureDeclarationNode procNode4 = makeProcedure(procScope3, procText4).value;
 
         String procText3 = String.format( // in the end, the effect is: a -= 1
                 "procedure proc_3; var c: Boolean; %s begin c := true; if c then a := a-1 end;",
                 procText4);
-        ProcedureDeclarationNode procNode3 = Parser.parseProcedure(progScope, procText3);
+        ProcedureDeclarationNode procNode3 = makeProcedure(progScope, procText3).value;
 
         String progText = String.format(
                 "program progIt; var a: REAL; %s %s begin a:= 0; proc_1(); proc_1(); proc_3(); proc_1(); end.",
                 procText1, procText3);
-        ProgramNode programNode = Parser.parseProgram(progText);
+        ProgramNode programNode = makeProgram(ROOT_SCOPE, progText).value;
 
 
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(progText));
