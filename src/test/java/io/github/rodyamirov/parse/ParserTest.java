@@ -12,20 +12,25 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
 import io.github.rodyamirov.tree.ProcedureCallNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
+import io.github.rodyamirov.tree.StatementNode;
 import io.github.rodyamirov.tree.SyntaxTree;
 import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -83,6 +88,13 @@ public class ParserTest {
         for (String text : texts) {
             ExpressionNode actual = Parser.parseExpression(ROOT_SCOPE, text);
             assertThat("Got the correct expression tree", actual, is(desired));
+        }
+    }
+
+    private void doParseStatementTest(String[] texts, StatementNode desired) {
+        for (String text : texts) {
+            StatementNode actual = Parser.parseStatement(ROOT_SCOPE, text);
+            assertThat("Got the correct statement node", actual, is(desired));
         }
     }
 
@@ -1069,5 +1081,109 @@ public class ParserTest {
         );
 
         doParseProgramTest(new String[] { progText }, desired);
+    }
+
+    @Test
+    public void whileLoopTest1() {
+        String whileText = "while 1<2 do a:=1";
+        WhileNode desired = new WhileNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "1<2"),
+                Parser.parseStatement(ROOT_SCOPE, "a := 1")
+        );
+        doParseStatementTest(new String[] { whileText }, desired);
+    }
+
+    @Test
+    public void whileLoopTest2() {
+        String whileText = "while ((1<2) and (a>=b)) do while c<d do begin a:= 2; int:=3.2 end";
+        WhileNode desired = new WhileNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "((1<2) and (a>=b))"),
+                new WhileNode(
+                        ROOT_SCOPE,
+                        Parser.parseExpression(ROOT_SCOPE, "c<d"),
+                        Parser.parseStatement(ROOT_SCOPE, "begin a:= 2; int:=3.2 end")
+                )
+        );
+        doParseStatementTest(new String[] { whileText }, desired);
+    }
+
+    @Test
+    public void doUntilLoopTest1() {
+        String loopText = "do a := 1 until 1<2";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "1<2"),
+                Parser.parseStatement(ROOT_SCOPE, "a:=1")
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void doUntilLoopTest2() {
+        /*
+        fun fact: indentation and carriage returns are a positive good
+            do
+                do
+                    while 1 < 2 do
+                        b := -12
+                until false
+            until true
+
+         */
+        String loopText = "do do while 1<2 do b := -12 until false until true";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "true"),
+                new DoUntilNode(
+                        ROOT_SCOPE,
+                        Parser.parseExpression(ROOT_SCOPE, "false"),
+                        Parser.parseStatement(ROOT_SCOPE, "while 1 < 2 do b := -12")
+                )
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void loopControlTest1() {
+        String loopText = "do begin break; continue; a := 12 end until 2 = 1";
+        DoUntilNode desired = new DoUntilNode(
+                ROOT_SCOPE,
+                Parser.parseExpression(ROOT_SCOPE, "2=1"),
+                new CompoundNode(
+                        ROOT_SCOPE,
+                        list(
+                                LoopControlNode.Break(ROOT_SCOPE),
+                                LoopControlNode.Continue(ROOT_SCOPE),
+                                Parser.parseStatement(ROOT_SCOPE, "a:=12")
+                        )
+                )
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void forLoopTest1() {
+        String loopText = "for a:=30+12-pro to 12-6*b do begin end";
+        ForNode desired = ForNode.Forward(
+                ROOT_SCOPE,
+                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
+                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
+                Parser.parseStatement(ROOT_SCOPE, "begin end")
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
+    }
+
+    @Test
+    public void forLoopTest2() {
+        String loopText = "for a:=30+12-pro downto 12-6*b do begin end";
+        ForNode desired = ForNode.Backward(
+                ROOT_SCOPE,
+                (AssignNode) Parser.parseStatement(ROOT_SCOPE, "a:= 30+12-pro"),
+                Parser.parseExpression(ROOT_SCOPE, "12-6*b"),
+                Parser.parseStatement(ROOT_SCOPE, "begin end")
+        );
+        doParseStatementTest(new String[] { loopText }, desired);
     }
 }

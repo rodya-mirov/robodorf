@@ -63,9 +63,9 @@ public class SymbolTableBuilderTest {
                 + "procedure proc1;"
                 + "     var b, c: Real;"
                 + "     BEGIN"
-                + "         b := a + 1;" // not really important but meh, give em something
+                + "         b := a + 1;"    // not really important but meh, give em something
                 + "         a := 12"
-                + "     END;"           // semicolon is necessary
+                + "     END;"               // semicolon is necessary
                 + "procedure proc2;"
                 + "     var a: Boolean;"
                 + "         d: INTEGER;"
@@ -73,10 +73,17 @@ public class SymbolTableBuilderTest {
                 + "         var d: REAL;"
                 + "             e: Integer;"
                 + "         begin {proc3}"
-                + "             d := 12"
+                + "             while 1<2 do ;"                 // empty while loop just for fun
+                + "             d := 12;"
+                + "             while d > 5 do d := d-1;"       // actually does something
+                + "             do break until 1<2;"            // this is pretty stupid i admit
+                + "             do continue until 1=2;"         // infinite loop!
+                + "             for e:=d to d+12 do d:=2;"
+                + "             for e:=d downto d-12 do d:=2"
                 + "         end {proc3};"
                 + "     begin {proc2}"
                 + "         d := 12;"
+                + "         do a := not a until a;"
                 + "         proc3();" // semi unnecessary, un-harmful
                 + "     end {proc2};"
                 + "begin {test3 -- the actual program!}"

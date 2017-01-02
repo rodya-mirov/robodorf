@@ -8,8 +8,11 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -22,6 +25,7 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 
 /**
  * Created by richard.rast on 12/27/16.
@@ -158,5 +162,29 @@ public class SymbolTableBuilder extends NodeVisitor {
     @Override
     public void visit(ProcedureCallNode procedureCallNode) {
         // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(LoopControlNode loopControlNode) {
+        // does nothing; we're only concerned with variable declarations
+    }
+
+    @Override
+    public void visit(WhileNode whileNode) {
+        whileNode.condition.acceptVisit(this);
+        whileNode.childStatement.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(DoUntilNode doUntilNode) {
+        doUntilNode.condition.acceptVisit(this);
+        doUntilNode.childStatement.acceptVisit(this);
+    }
+
+    @Override
+    public void visit(ForNode forNode) {
+        forNode.assignNode.acceptVisit(this);
+        forNode.bound.acceptVisit(this);
+        forNode.body.acceptVisit(this);
     }
 }

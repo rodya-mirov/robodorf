@@ -35,6 +35,16 @@ public class Tokenizer {
 
         reservedWordsMap.put(standardizeId("DIV"), Token.INT_DIVIDE);
         reservedWordsMap.put(standardizeId("MOD"), Token.MOD);
+
+        reservedWordsMap.put(standardizeId("WHILE"), Token.WHILE);
+        reservedWordsMap.put(standardizeId("DO"), Token.DO);
+        reservedWordsMap.put(standardizeId("UNTIL"), Token.UNTIL);
+        reservedWordsMap.put(standardizeId("FOR"), Token.FOR);
+        reservedWordsMap.put(standardizeId("TO"), Token.TO);
+        reservedWordsMap.put(standardizeId("DOWNTO"), Token.DOWNTO);
+        reservedWordsMap.put(standardizeId("CONTINUE"), Token.CONTINUE);
+        reservedWordsMap.put(standardizeId("BREAK"), Token.BREAK);
+
         reservedWords = ImmutableMap.copyOf(reservedWordsMap);
     }
 

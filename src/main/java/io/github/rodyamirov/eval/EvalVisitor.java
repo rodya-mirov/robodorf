@@ -1,9 +1,9 @@
 package io.github.rodyamirov.eval;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
-import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
@@ -14,9 +14,13 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
+import io.github.rodyamirov.tree.LoopStatementNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -29,8 +33,12 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
+import io.github.rodyamirov.utils.SingleElementStack;
 
+import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Supplier;
 
 /**
  * Created by richard.rast on 12/25/16.
@@ -48,11 +56,138 @@ public class EvalVisitor extends NodeVisitor {
         return visitor.symbolValueTable;
     }
 
-    private final Stack<SymbolValue> resultStack = new Stack<>();
+    private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
+    private final SingleElementStack<LoopControlNode> loopControlNodes = new SingleElementStack<>();
+
+    // not final; allows for other contexts to have their own loop stack more easily
+    private Stack<LoopStatementNode> loopNodeStack = new Stack<>();
+
     private final SymbolValueTable symbolValueTable;
 
     private EvalVisitor(SymbolTable globalDeclarations) {
         symbolValueTable = new SymbolValueTable(globalDeclarations);
+    }
+
+    @Override
+    public void visit(WhileNode whileNode) {
+        Supplier<Boolean> checkCondition =
+                () -> {
+                    whileNode.condition.acceptVisit(this);
+                    SymbolValue<Boolean> result = resultStack.pop();
+                    return result.value;
+                };
+
+        loopNodeStack.push(whileNode);
+        while (checkCondition.get()) {
+            whileNode.childStatement.acceptVisit(this);
+            if (endLoopShouldBreak()) {
+                break;
+            }
+        }
+        loopNodeStack.pop();
+    }
+
+    @Override
+    public void visit(DoUntilNode doUntilNode) {
+        Supplier<Boolean> checkCondition =
+                () -> {
+                    doUntilNode.condition.acceptVisit(this);
+                    SymbolValue<Boolean> result = resultStack.pop();
+                    return result.value;
+                };
+
+        loopNodeStack.push(doUntilNode);
+
+        do {
+            doUntilNode.childStatement.acceptVisit(this);
+            if (endLoopShouldBreak()) {
+                break;
+            }
+        } while (! checkCondition.get());
+
+        loopNodeStack.pop();
+    }
+
+    @Override
+    public void visit(ForNode forNode) {
+        loopNodeStack.push(forNode);
+
+        VariableAssignNode loopVariable = forNode.assignNode.variableAssignNode;
+
+        // TODO move this check to a semantic analyzer
+        TypeSpec assignType = symbolValueTable.getType(forNode.scope, forNode.assignNode.variableAssignNode.idToken);
+        if (assignType != TypeSpec.INTEGER) {
+            throw TypeCheckException.wrongValueClass(assignType, TypeSpec.INTEGER);
+        }
+
+        // set up the start
+        forNode.assignNode.expressionNode.acceptVisit(this);
+        int start = ((SymbolValue<Integer>) resultStack.pop()).value;
+
+        forNode.bound.acceptVisit(this);
+        int end = ((SymbolValue<Integer>) resultStack.pop()).value;
+
+        int change;
+        switch (forNode.direction) {
+            case FORWARD:
+                change = 1; break;
+
+            case BACKWARD:
+                change = -1; break;
+
+            default:
+                String message = String.format("Unrecognized direction %s for a for-loop", forNode.direction);
+                throw new IllegalStateException(message);
+        }
+
+        for (int i = start; i != end+change; i += change) {
+            SymbolValue<Integer> loopValue = SymbolValue.make(TypeSpec.INTEGER, i);
+            symbolValueTable.setValue(forNode.scope, loopVariable.idToken, loopValue);
+            symbolValueTable.lockValue(forNode.scope, loopVariable.idToken);
+
+            forNode.body.acceptVisit(this);
+
+            symbolValueTable.unlockValue(forNode.scope, loopVariable.idToken);
+
+            if (endLoopShouldBreak()) {
+                break;
+            }
+        }
+
+        loopNodeStack.pop();
+    }
+
+    // safely pops the top loop control directive; returns true iff it's a break
+    private boolean endLoopShouldBreak() {
+        if (loopControlNodes.isEmpty()) {
+            return false;
+        } else {
+            LoopControlNode loopControlNode = loopControlNodes.pop();
+
+            switch (loopControlNode.type) {
+                case BREAK:
+                    return true;
+                case CONTINUE:
+                    return false;
+
+                default:
+                    String message = String.format(
+                            "Unrecognized loop control directive %s",
+                            loopControlNode.type
+                    );
+                    throw new IllegalArgumentException(message);
+            }
+        }
+    }
+
+    @Override
+    public void visit(LoopControlNode loopControlNode) {
+        if (loopNodeStack.isEmpty()) {
+            String message = String.format("Error: %s while not in loop!", loopControlNode.type.name());
+            throw new IllegalStateException(message);
+        }
+
+        loopControlNodes.push(loopControlNode);
     }
 
     @Override
@@ -61,6 +196,9 @@ public class EvalVisitor extends NodeVisitor {
                 symbolValueTable.getValue(procCall.scope, procCall.procedureName);
 
         ProcedureDeclarationNode call = procValue.value;
+
+        Stack<LoopStatementNode> outsideLoopStack = loopNodeStack;
+        loopNodeStack = new Stack<>();
 
         // then just execute everything in it
         call.blockNode.acceptVisit(this);
@@ -72,6 +210,9 @@ public class EvalVisitor extends NodeVisitor {
                 symbolValueTable.clearValue(scope, idToken);
             }
         }
+
+        // restore the state of the loop stack once the procedure call is over
+        loopNodeStack = outsideLoopStack;
     }
 
     @Override
@@ -218,14 +359,19 @@ public class EvalVisitor extends NodeVisitor {
     @Override
     public void visit(CompoundNode compoundNode) {
         for (StatementNode statement : compoundNode.statements) {
+            // this is the only place a continue/break actually does anything
+            if (! loopControlNodes.isEmpty()){
+                break;
+            }
+
             statement.acceptVisit(this);
         }
     }
 
     @Override
     public void visit(NoOpNode noOpNode) {
-        // it'symbolValueTable a No Op
-        // that means _no_ _operations_
+        // it's a No Op
+        // that means _no operations_
     }
 
     @Override

@@ -8,7 +8,9 @@ import io.github.rodyamirov.symbols.SymbolTableBuilder;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueTable;
 import io.github.rodyamirov.symbols.TypeSpec;
+import io.github.rodyamirov.tree.AssignNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import org.junit.Test;
@@ -54,8 +56,8 @@ public class EvalVisitorTest {
     @Test
     public void exprTest1() {
         SymbolTable symbolTable = SymbolTable.builder().build();
-        doExpressionTest("12+-1", symbolTable, 11);
         doExpressionTest("-12", symbolTable, -12);
+        doExpressionTest("12+-1", symbolTable, 11);
         doExpressionTest("1*-13", symbolTable, -13);
         doExpressionTest("13*-1", symbolTable, -13);
         doExpressionTest("-1--3", symbolTable, 2);
@@ -518,6 +520,458 @@ public class EvalVisitorTest {
         desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
 
         doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void whileTest1() {
+        Token<String> procName = Token.ID("proc1");
+        String procText = ""
+                + "procedure proc1;"
+                + " begin {proc1}"
+                + "     while a > 3 do a := a-2"
+                + " end {proc1};";
+
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + "program whileTest1;"
+                + " var a: integer;"
+                + procText
+                + "begin {whileTest1}"
+                + " a := 12;"
+                + " proc1();"
+                + " a := a+3;"
+                + " proc1();"
+                + "end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, procName, SymbolValue.make(TypeSpec.PROCEDURE, Parser.parseProcedure(progScope, procText)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilTest1() {
+        Token<String> procName = Token.ID("proc1");
+        String procText = ""
+                + "procedure proc1;"
+                + " begin {proc1}"
+                + "     do a := a-2 until a <= 3"
+                + " end {proc1};";
+
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + "program whileTest1;"
+                + " var a: integer;"
+                + procText
+                + "begin {whileTest1}"
+                + " a := 12;"
+                + " proc1();"
+                + " a := a+3;"
+                + " proc1();"
+                + "end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, procName, SymbolValue.make(TypeSpec.PROCEDURE, Parser.parseProcedure(progScope, procText)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 3));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void whileContinueTest1() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     while (a >= 0) and (a<= 30) do"
+                + "         begin"
+                + "             a := 40;"
+                + "             continue;"
+                + "             a := -15"
+                + "         end"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void whileContinueTest2() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     while (a >= 0) and (a <= 30) do"
+                + "         begin"
+                + "             a := a+3;"
+                + "             continue;"
+                + "             a := -15"
+                + "         end"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void whileBreakTest1() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     while (a >= 0) and (a <= 30) do"
+                + "         begin"
+                + "             a := 40;"
+                + "             break;"
+                + "             a := -15"
+                + "         end"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void whileBreakTest2() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     while (a >= 0) and (a <= 30) do"
+                + "         begin"
+                + "             a := a+3;"
+                + "             break;"
+                + "             a := -15"
+                + "         end"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilContinueTest1() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             a := 40;"
+                + "             continue;"
+                + "             a := -15"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilContinueTest2() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             a := a+3;"
+                + "             continue;"
+                + "             a := -15"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilContinueTest3() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             begin" // just to check it can bust through multiple compounds
+                + "                 a := a+3;"
+                + "                 continue;"
+                + "                 a := -15"
+                + "             end;"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilContinueTest4() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer; bad, good: boolean;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     bad := false;"
+                + "     good := false;"
+                + "     do"
+                + "         begin"
+                + "             do"
+                + "                 begin"
+                + "                     a := a+3;"
+                + "                     continue;"
+                + "                     bad := true;"
+                + "                 end"
+                + "             until a > 30;"
+                + "             good := true"  // make sure continue doesn't skip this line
+                + "         end"
+                + "     until true" // not much of a loop
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 33));
+        desired.setValue(progScope, Token.ID("good"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        desired.setValue(progScope, Token.ID("bad"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilBreakTest1() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             a := 40;"
+                + "             break;"
+                + "             a := -15"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 40));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilBreakTest2() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             a := a+3;"
+                + "             break;"
+                + "             a := -15"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilBreakTest3() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     do"
+                + "         begin"
+                + "             begin" // just to check it can bust through multiple compounds
+                + "                 a := a+3;"
+                + "                 break;"
+                + "                 a := -15"
+                + "             end;"
+                + "         end"
+                + "     until (a<0) or (a>30)"
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void doUntilBreakTest4() {
+        Token<String> progName = Token.ID("whileTest1");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        String prog = ""
+                + " program whileTest1;"
+                + "     var a: integer; bad, good: boolean;"
+                + " begin {whileTest1}"
+                + "     a := 12;"
+                + "     bad := false;"
+                + "     good := false;"
+                + "     do"
+                + "         begin"
+                + "             do"
+                + "                 begin"
+                + "                     a := a+3;"
+                + "                     break;"
+                + "                     bad := true;"
+                + "                 end"
+                + "             until a > 30;"
+                + "             good := true"  // make sure break doesn't break this line
+                + "         end"
+                + "     until true" // not much of a loop
+                + " end .";
+        SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
+        desired.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(prog)));
+        desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 15));
+        desired.setValue(progScope, Token.ID("good"), SymbolValue.make(TypeSpec.BOOLEAN, true));
+        desired.setValue(progScope, Token.ID("bad"), SymbolValue.make(TypeSpec.BOOLEAN, false));
+        doProgramTest(prog, desired);
+    }
+
+    @Test
+    public void forLoopTest1() {
+        String progText = ""
+                + "program a;"
+                + "     var a, b: integer; c: integer; d: real;"
+                + "begin"
+                + "     a := 1;"
+                + "     b := 30;"
+                + "     c := 0;"
+                + "     d := b+1;"
+                + "     for a:=b*b to 913 do"
+                + "         c := c+1;"
+                + "     for a := b downto 10 do"
+                + "         d := d-1"
+                + "end .";
+
+        Token<String> progName = Token.ID("a");
+        Scope progScope = ROOT_SCOPE.makeChildScope(progName);
+        SymbolValueTable symbolValueTable = new SymbolValueTable(makeSymbolTable(progText));
+        symbolValueTable.setValue(ROOT_SCOPE, progName, SymbolValue.make(TypeSpec.PROGRAM, Parser.parseProgram(progText)));
+        symbolValueTable.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.INTEGER, 10));
+        symbolValueTable.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.INTEGER, 30));
+        symbolValueTable.setValue(progScope, Token.ID("c"), SymbolValue.make(TypeSpec.INTEGER, 14));
+        symbolValueTable.setValue(progScope, Token.ID("d"), SymbolValue.make(TypeSpec.REAL, 10.0f));
+
+        doProgramTest(progText, symbolValueTable);
+    }
+
+    @Test
+    public void procCallBreakTest() {
+        String prog;
+
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin break end;"
+                + "begin {program now}"
+                + " while true do"
+                + "     um()" // one statement loop
+                + "end .";
+
+        ProgramNode programNode = Parser.parseProgram(prog);
+        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        try {
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("Illegal break; should have thrown an error", false, is(true));
+        } catch (IllegalStateException e) {
+            // this is all good
+        }
+
+        // but also check that breaks inside procedure calls are still OK
+        prog = ""
+                + "program goodBreakTest;"
+                + "procedure um;"
+                + " begin while true do break end;"
+                + "begin um() end .";
+
+        programNode = Parser.parseProgram(prog);
+        symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        // no error needed
+        EvalVisitor.evaluateProgram(programNode, symbolTable);
+    }
+
+    @Test
+    public void procCallContinueTest() {
+        String prog;
+
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin continue end;"
+                + "begin {program now}"
+                + " while true do"
+                + "     um()" // one statement loop
+                + "end .";
+
+        ProgramNode programNode = Parser.parseProgram(prog);
+        SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+
+        try {
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("Illegal continue; should have thrown an error", false, is(true));
+        } catch (IllegalStateException e) {
+            // this is all good
+        }
+
+        // but some continues are ok
+        prog = ""
+                + "program badBreakTest;"
+                + "procedure um;"
+                + " begin do continue until true end;"
+                + "begin {program now}"
+                + " um()"
+                + "end .";
+
+        programNode = Parser.parseProgram(prog);
+        symbolTable = SymbolTableBuilder.buildFrom(programNode);
+        EvalVisitor.evaluateProgram(programNode, symbolTable);
     }
 
     @Test

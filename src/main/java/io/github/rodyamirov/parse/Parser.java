@@ -13,9 +13,12 @@ import io.github.rodyamirov.tree.BlockNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.CompoundNode;
 import io.github.rodyamirov.tree.DeclarationNode;
+import io.github.rodyamirov.tree.DoUntilNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
+import io.github.rodyamirov.tree.LoopControlNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.OrElseNode;
 import io.github.rodyamirov.tree.ProcedureCallNode;
@@ -27,6 +30,7 @@ import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
 import io.github.rodyamirov.tree.VariableEvalNode;
+import io.github.rodyamirov.tree.WhileNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,6 +107,14 @@ public class Parser {
         ProcedureDeclarationNode out = parser.procedureDeclaration();
         parser.eatStrict(Token.Type.EOF);
         return out;
+    }
+
+    public static StatementNode parseStatement(Scope rootScope, String text) {
+        Parser parser = new Parser(text);
+        parser.currentScope = rootScope;
+        StatementNode result = parser.statement();
+        parser.eatStrict(Token.Type.EOF);
+        return result;
     }
 
     public static ExpressionNode parseExpression(Scope rootScope, String text) {
@@ -231,10 +243,22 @@ public class Parser {
     private StatementNode statement() {
         // statement -> compoundStatement | ifStatement | assignmentStatement | empty
         switch (currentToken.type) {
+            case FOR:
+                return forStatement();
+            case DO:
+                return doUntilStatement();
+            case WHILE:
+                return whileStatement();
             case BEGIN:
                 return compoundStatement();
             case IF:
                 return ifStatement();
+            case BREAK:
+                eatStrict(Token.Type.BREAK);
+                return LoopControlNode.Break(currentScope);
+            case CONTINUE:
+                eatStrict(Token.Type.CONTINUE);
+                return LoopControlNode.Continue(currentScope);
             case ID:
                 Token.Type nextType = tokenizer.peek().type;
                 switch (nextType) {
@@ -250,6 +274,56 @@ public class Parser {
             default:
                 return empty();
         }
+    }
+
+    private ForNode forStatement() {
+        eatStrict(Token.Type.FOR);
+
+        AssignNode assignNode = assignmentStatement();
+
+        Token directionToken = eatStrict(Token.Type.TO, Token.Type.DOWNTO);
+
+        ExpressionNode bound = expression();
+
+        eatStrict(Token.Type.DO);
+
+        StatementNode body = statement();
+
+        switch (directionToken.type) {
+            case TO:
+                return ForNode.Forward(currentScope, assignNode, bound, body);
+
+            case DOWNTO:
+                return ForNode.Backward(currentScope, assignNode, bound, body);
+
+            default:
+                String message = String.format("Unrecognized direction token %s", directionToken);
+                throw new IllegalStateException(message);
+        }
+    }
+
+    private DoUntilNode doUntilStatement() {
+        eatStrict(Token.Type.DO);
+
+        StatementNode childStatement = statement();
+
+        eatStrict(Token.Type.UNTIL);
+
+        ExpressionNode condition = expression();
+
+        return new DoUntilNode(currentScope, condition, childStatement);
+    }
+
+    private WhileNode whileStatement() {
+        eatStrict(Token.Type.WHILE);
+
+        ExpressionNode condition = expression();
+
+        eatStrict(Token.Type.DO);
+
+        StatementNode childStatement = statement();
+
+        return new WhileNode(currentScope, condition, childStatement);
     }
 
     private ProcedureCallNode procedureCallStatement() {
@@ -279,7 +353,7 @@ public class Parser {
         }
     }
 
-    private StatementNode assignmentStatement() {
+    private AssignNode assignmentStatement() {
         // assignmentStatement -> variable ASSIGN additiveExpression
         VariableAssignNode var = variableDefinition();
         eatStrict(Token.Type.ASSIGN);
