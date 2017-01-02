@@ -12,8 +12,7 @@ import java.util.Objects;
 public final class CompoundNode extends StatementNode {
     public final ImmutableList<StatementNode> statements;
 
-    public CompoundNode(Scope scope, List<StatementNode> statements) {
-        super(scope);
+    public CompoundNode(List<StatementNode> statements) {
         this.statements = ImmutableList.copyOf(statements);
     }
 
@@ -32,5 +31,12 @@ public final class CompoundNode extends StatementNode {
 
         return Objects.equals(this.statements, other.statements)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + statements.hashCode();
+        return out;
     }
 }

@@ -11,8 +11,7 @@ public final class DoUntilNode extends LoopStatementNode {
     public final ExpressionNode condition;
     public final StatementNode childStatement;
 
-    public DoUntilNode(Scope scope, ExpressionNode condition, StatementNode childStatement) {
-        super(scope);
+    public DoUntilNode(ExpressionNode condition, StatementNode childStatement) {
         this.condition = condition;
         this.childStatement = childStatement;
     }
@@ -25,14 +24,17 @@ public final class DoUntilNode extends LoopStatementNode {
 
         DoUntilNode other = (DoUntilNode)o;
 
-        return Objects.equals(this.scope, other.scope)
-                && Objects.equals(this.condition, this.condition)
-                && Objects.equals(this.childStatement, other.childStatement);
+        return Objects.equals(this.condition, this.condition)
+                && Objects.equals(this.childStatement, other.childStatement)
+                && Objects.equals(this.scope, other.scope);
     }
 
     @Override
     public int hashCode() {
-        return 43*43*scope.hashCode() + 43*condition.hashCode() + childStatement.hashCode();
+        int out = Objects.hashCode(scope);
+        out = 43 * out + condition.hashCode();
+        out = 43 * out + childStatement.hashCode();
+        return out;
     }
 
     @Override

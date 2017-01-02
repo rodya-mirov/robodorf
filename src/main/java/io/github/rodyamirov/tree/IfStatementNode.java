@@ -20,16 +20,14 @@ public final class IfStatementNode extends StatementNode {
     public final StatementNode thenStatement;
     public final Optional<StatementNode> elseStatement;
 
-    public IfStatementNode(Scope scope, ExpressionNode condition, StatementNode thenStatement) {
-        super(scope);
+    public IfStatementNode(ExpressionNode condition, StatementNode thenStatement) {
         this.condition = condition;
         this.thenStatement = thenStatement;
         this.elseStatement = Optional.empty();
     }
 
-    public IfStatementNode(Scope scope, ExpressionNode condition, StatementNode thenStatement,
+    public IfStatementNode(ExpressionNode condition, StatementNode thenStatement,
             StatementNode elseStatement) {
-        super(scope);
         this.condition = condition;
         this.thenStatement = thenStatement;
         this.elseStatement = Optional.of(elseStatement);
@@ -51,5 +49,14 @@ public final class IfStatementNode extends StatementNode {
                 && Objects.equals(this.thenStatement, other.thenStatement)
                 && Objects.equals(this.elseStatement, other.elseStatement)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + condition.hashCode();
+        out = 43 * out + thenStatement.hashCode();
+        out = 43 * out + elseStatement.hashCode();
+        return out;
     }
 }

@@ -10,8 +10,7 @@ import java.util.Objects;
 public final class OrElseNode extends ExpressionNode {
     public final ExpressionNode left, right;
 
-    public OrElseNode(Scope scope, ExpressionNode left, ExpressionNode right) {
-        super(scope);
+    public OrElseNode(ExpressionNode left, ExpressionNode right) {
         this.left = left;
         this.right = right;
     }
@@ -31,5 +30,13 @@ public final class OrElseNode extends ExpressionNode {
         return Objects.equals(this.left, other.left)
                 && Objects.equals(this.right, other.right)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + left.hashCode();
+        out = 43 * out + right.hashCode();
+        return out;
     }
 }

@@ -15,14 +15,13 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.BOOLEAN;
 
-    private BooleanConstantNode(Scope scope, SymbolValue<Boolean> value) {
-        super(scope);
+    private BooleanConstantNode(SymbolValue<Boolean> value) {
         this.value = value;
     }
 
-    public static BooleanConstantNode make(Scope scope, Token token) {
+    public static BooleanConstantNode make(Token token) {
         SymbolValue<Boolean> sv = SymbolValue.make(DESIRED_TYPE, token.value);
-        return new BooleanConstantNode(scope, sv);
+        return new BooleanConstantNode(sv);
     }
 
     @Override
@@ -40,5 +39,12 @@ public final class BooleanConstantNode extends TerminalExpressionNode {
 
         return Objects.equals(this.value, other.value)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + value.hashCode();
+        return out;
     }
 }

@@ -15,8 +15,7 @@ public final class VariableDeclarationNode extends SyntaxTree {
     public final ImmutableList<Token<String>> variableIds;
     public final TypeSpec varType;
 
-    public VariableDeclarationNode(Scope scope, List<Token<String>> variableIds, TypeSpec varType) {
-        super(scope);
+    public VariableDeclarationNode(List<Token<String>> variableIds, TypeSpec varType) {
         this.variableIds = ImmutableList.copyOf(variableIds);
         this.varType = varType;
     }
@@ -37,5 +36,13 @@ public final class VariableDeclarationNode extends SyntaxTree {
         return Objects.equals(this.variableIds, other.variableIds)
                 && Objects.equals(this.varType, other.varType)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + variableIds.hashCode();
+        out = 43 * out + varType.hashCode();
+        return out;
     }
 }

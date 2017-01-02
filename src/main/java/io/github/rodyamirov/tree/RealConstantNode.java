@@ -15,14 +15,13 @@ public final class RealConstantNode extends TerminalExpressionNode {
 
     public static final TypeSpec DESIRED_TYPE = TypeSpec.REAL;
 
-    private RealConstantNode(Scope scope, SymbolValue<Float> value) {
-        super(scope);
+    private RealConstantNode(SymbolValue<Float> value) {
         this.value = value;
     }
 
-    public static RealConstantNode make(Scope scope, Token token) {
+    public static RealConstantNode make(Token token) {
         SymbolValue<Float> sv = SymbolValue.make(DESIRED_TYPE, token.value);
-        return new RealConstantNode(scope, sv);
+        return new RealConstantNode(sv);
     }
 
     @Override
@@ -40,5 +39,12 @@ public final class RealConstantNode extends TerminalExpressionNode {
 
         return Objects.equals(this.value, other.value)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + value.hashCode();
+        return out;
     }
 }

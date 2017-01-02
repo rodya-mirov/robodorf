@@ -40,9 +40,7 @@ public final class BinOpNode extends ExpressionNode {
                     .build();
     private static final ImmutableSet<Token.Type> allowedOpTypes = evaluations.keySet();
 
-    public BinOpNode(Scope scope, ExpressionNode left, ExpressionNode right, Token opToken) {
-        super(scope);
-
+    public BinOpNode(ExpressionNode left, ExpressionNode right, Token opToken) {
         if (left == null || right == null || opToken == null) {
             String message = "Both children must be non-null";
             throw new IllegalArgumentException(message);
@@ -78,5 +76,14 @@ public final class BinOpNode extends ExpressionNode {
                 && Objects.equals(this.left, other.left)
                 && Objects.equals(this.right, other.right)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + opToken.hashCode();
+        out = 43 * out + left.hashCode();
+        out = 43 * out + right.hashCode();
+        return out;
     }
 }

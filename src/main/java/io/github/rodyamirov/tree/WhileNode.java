@@ -11,8 +11,7 @@ public final class WhileNode extends LoopStatementNode {
     public final ExpressionNode condition;
     public final StatementNode childStatement;
 
-    public WhileNode(Scope scope, ExpressionNode condition, StatementNode childStatement) {
-        super(scope);
+    public WhileNode(ExpressionNode condition, StatementNode childStatement) {
         this.condition = condition;
         this.childStatement = childStatement;
     }
@@ -25,14 +24,14 @@ public final class WhileNode extends LoopStatementNode {
 
         WhileNode other = (WhileNode)o;
 
-        return Objects.equals(this.scope, other.scope)
-                && Objects.equals(this.condition, other.condition)
-                && Objects.equals(this.childStatement, other.childStatement);
+        return Objects.equals(this.condition, other.condition)
+                && Objects.equals(this.childStatement, other.childStatement)
+                && Objects.equals(this.scope, other.scope);
     }
 
     @Override
     public int hashCode() {
-        int out = scope.hashCode();
+        int out = Objects.hashCode(scope);
         out = 43 * out + condition.hashCode();
         out = 43 * out + childStatement.hashCode();
         return out;

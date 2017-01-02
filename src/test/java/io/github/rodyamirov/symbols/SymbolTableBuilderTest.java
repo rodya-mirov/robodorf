@@ -6,7 +6,7 @@ import io.github.rodyamirov.parse.Parser;
 import io.github.rodyamirov.tree.ProgramNode;
 import org.junit.Test;
 
-import static io.github.rodyamirov.parse.Parser.ROOT_SCOPE;
+import static io.github.rodyamirov.symbols.ScopeAssigner.ROOT_SCOPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
@@ -16,6 +16,7 @@ import static org.hamcrest.core.Is.is;
 public class SymbolTableBuilderTest {
     private void doBuildProgramTest(String text, SymbolTable desired) {
         ProgramNode programNode = Parser.parseProgram(text);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
         SymbolTable actual = SymbolTableBuilder.buildFrom(programNode);
         assertThat("Symbol Table is correct", actual, is(desired));
     }
@@ -120,6 +121,7 @@ public class SymbolTableBuilderTest {
 
         // error is not thrown when parsing ...
         ProgramNode programNode = Parser.parseProgram(progText);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
 
         try {
             SymbolTableBuilder.buildFrom(programNode);
@@ -136,6 +138,7 @@ public class SymbolTableBuilderTest {
 
         // error is not thrown when parsing ...
         ProgramNode programNode = Parser.parseProgram(progText);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
 
         try {
             SymbolTableBuilder.buildFrom(programNode);
@@ -152,6 +155,7 @@ public class SymbolTableBuilderTest {
 
         // error is not thrown when parsing ...
         ProgramNode programNode = Parser.parseProgram(progText);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
 
         try {
             SymbolTableBuilder.buildFrom(programNode);
@@ -170,6 +174,7 @@ public class SymbolTableBuilderTest {
 
         // error is not thrown when parsing ...
         ProgramNode programNode = Parser.parseProgram(progText);
+        ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
 
         try {
             SymbolTableBuilder.buildFrom(programNode);

@@ -12,8 +12,7 @@ public final class ProgramNode extends SyntaxTree {
     public final Token<String> name;
     public final BlockNode blockNode;
 
-    public ProgramNode(Scope scope, Token<String> name, BlockNode blockNode) {
-        super(scope);
+    public ProgramNode(Token<String> name, BlockNode blockNode) {
         this.name = name;
         this.blockNode = blockNode;
     }
@@ -34,5 +33,13 @@ public final class ProgramNode extends SyntaxTree {
         return Objects.equals(this.name, other.name)
                 && Objects.equals(this.blockNode, other.blockNode)
                 && Objects.equals(this.scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+        int out = Objects.hashCode(scope);
+        out = 43 * out + name.hashCode();
+        out = 43 * out + blockNode.hashCode();
+        return out;
     }
 }

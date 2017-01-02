@@ -28,6 +28,11 @@ public class SymbolValue<T> {
                 && Objects.equals(this.value, other.value);
     }
 
+    @Override
+    public int hashCode() {
+        return 43 * Objects.hashCode(value) + typeSpec.hashCode();
+    }
+
     public static SymbolValue make(TypeSpec typeSpec, Object value) {
         Class desiredClass = typeSpec.getValueClass();
 
