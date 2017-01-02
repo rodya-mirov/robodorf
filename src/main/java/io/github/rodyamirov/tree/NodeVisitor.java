@@ -36,7 +36,7 @@ public abstract class NodeVisitor {
     public abstract void visit(ProcedureCallNode procedureCallNode);
     public abstract void visit(ProcedureDeclarationNode procedureDeclarationNode);
     public abstract void visit(ProgramNode programNode);
-    public abstract void visit(RealConstantNode intConstantNode);
+    public abstract void visit(RealConstantNode realConstantNode);
     public abstract void visit(UnaryOpNode unaryOpNode);
     public abstract void visit(VariableAssignNode variableAssignNode);
     public abstract void visit(VariableDeclarationNode variableDeclarationNode);

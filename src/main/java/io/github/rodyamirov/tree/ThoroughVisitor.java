@@ -109,7 +109,7 @@ public abstract class ThoroughVisitor extends NodeVisitor {
     }
 
     @Override
-    public void visit(RealConstantNode intConstantNode) {
+    public void visit(RealConstantNode realConstantNode) {
     }
 
     @Override

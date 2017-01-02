@@ -37,6 +37,7 @@ public final class RealConstantNode extends TerminalExpressionNode {
         RealConstantNode other = (RealConstantNode)o;
 
         return Objects.equals(this.value, other.value)
+                && Objects.equals(this.outputType, other.outputType)
                 && Objects.equals(this.scope, other.scope);
     }
 
