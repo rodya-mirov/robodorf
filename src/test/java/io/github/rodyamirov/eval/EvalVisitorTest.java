@@ -1,5 +1,6 @@
 package io.github.rodyamirov.eval;
 
+import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.parse.Parser;
 import io.github.rodyamirov.symbols.Scope;
@@ -168,6 +169,28 @@ public class EvalVisitorTest {
 
         doExpressionTest("3.1 < 12.0*4-2", symbolTable, true);
         doExpressionTest("12.0-7.9 >= 1*4+6", symbolTable, false);
+    }
+
+    @Test
+    public void wrongTypeTest1() {
+        // this throws a runtime exception -- SymbolValueTable handles this safety -- but
+        // preprocessing will also handle this
+        String progText = ""
+                + "program a;"
+                + " var b: integer;"
+                + " begin"
+                + "     b := false"
+                + " end .";
+
+        try {
+            ProgramNode programNode = Parser.parseProgram(progText);
+            ScopeAssigner.assignScopes(ROOT_SCOPE, programNode);
+            SymbolTable symbolTable = SymbolTableBuilder.buildFrom(programNode);
+            EvalVisitor.evaluateProgram(programNode, symbolTable);
+            assertThat("An error should have been thrown", true, is(false));
+        } catch (TypeCheckException tce) {
+            // great :)
+        }
     }
 
     @Test

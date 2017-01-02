@@ -2,6 +2,7 @@ package io.github.rodyamirov.analysis;
 
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.exceptions.TypeCheckException;
+import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
 import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
@@ -9,6 +10,7 @@ import io.github.rodyamirov.tree.AssignNode;
 import io.github.rodyamirov.tree.BinOpNode;
 import io.github.rodyamirov.tree.BooleanConstantNode;
 import io.github.rodyamirov.tree.ExpressionNode;
+import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.OrElseNode;
 import io.github.rodyamirov.tree.RealConstantNode;
@@ -52,7 +54,18 @@ public class TypeChecker extends ThoroughVisitor {
 
     private boolean checkTypes(Set<TypeSpec> allowed, ExpressionNode toCheck) {
         if (! allowed.contains(toCheck.outputType)) {
-            errorMessages.add(new ErrorMessage(String.format("Expected type among %s, got %s", allowed, toCheck.outputType), toCheck));
+            String message = String.format("Expected type among %s, got %s", allowed, toCheck.outputType);
+            errorMessages.add(new ErrorMessage(message, toCheck));
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private boolean checkTypes(Set<TypeSpec> allowed, VariableAssignNode toCheck) {
+        if (! allowed.contains(toCheck.variableType)) {
+            String message = String.format("Expected type among %s, got %s", allowed, toCheck.variableType);
+            errorMessages.add(new ErrorMessage(message, toCheck));
             return false;
         } else {
             return true;
@@ -83,6 +96,21 @@ public class TypeChecker extends ThoroughVisitor {
             default:
                 throw TypeCheckException.conversionImpossible(left, TypeSpec.REAL);
         }
+    }
+
+    @Override
+    public void visit(ForNode forNode) {
+        super.visit(forNode);
+
+        checkTypes(INTEGER, forNode.assignNode.variableAssignNode);
+    }
+
+    @Override
+    public void visit(VariableAssignNode variableAssignNode) {
+        super.visit(variableAssignNode);
+
+        variableAssignNode.variableType =
+                symbolTable.getType(variableAssignNode.scope, variableAssignNode.idToken);
     }
 
     @Override
@@ -127,7 +155,7 @@ public class TypeChecker extends ThoroughVisitor {
         ExpressionNode leftInput = binOpNode.left;
         ExpressionNode rightInput = binOpNode.right;
 
-        // if we got an error lower down it doesn't make sense to evaluate the output here
+        // if we got an error lower down it doesn't make sense to evaluateProgram the output here
         if (leftInput.outputType == null || rightInput.outputType == null) {
             return;
         }
@@ -274,6 +302,8 @@ public class TypeChecker extends ThoroughVisitor {
                 );
                 throw new IllegalArgumentException(message);
         }
+
+        unaryOpNode.outputType = outputType;
     }
 
     @Override

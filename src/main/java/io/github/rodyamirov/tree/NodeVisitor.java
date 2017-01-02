@@ -10,7 +10,7 @@ package io.github.rodyamirov.tree;
  * are all immutable, so they're safe from side effects of the NodeVisitor classes.
  *
  * Implementors of NodeVisitor can do whatever they want with the `visit` methods, but this is how
- * the interface is designed. For example, to evaluate an ExpressionNode (en) the ideal way would
+ * the interface is designed. For example, to evaluateProgram an ExpressionNode (en) the ideal way would
  * be to do this:
  *      EvalVisitor visitor = new EvalVisitor();
  *      en.acceptVisit(visitor)                     // wrapper for visitor.visit(en)

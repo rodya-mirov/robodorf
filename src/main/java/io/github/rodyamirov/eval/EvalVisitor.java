@@ -20,7 +20,6 @@ import io.github.rodyamirov.tree.ForNode;
 import io.github.rodyamirov.tree.IfStatementNode;
 import io.github.rodyamirov.tree.IntConstantNode;
 import io.github.rodyamirov.tree.LoopControlNode;
-import io.github.rodyamirov.tree.LoopStatementNode;
 import io.github.rodyamirov.tree.NoOpNode;
 import io.github.rodyamirov.tree.NodeVisitor;
 import io.github.rodyamirov.tree.OrElseNode;
@@ -29,6 +28,7 @@ import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
 import io.github.rodyamirov.tree.StatementNode;
+import io.github.rodyamirov.tree.SyntaxTree;
 import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
@@ -36,23 +36,23 @@ import io.github.rodyamirov.tree.VariableEvalNode;
 import io.github.rodyamirov.tree.WhileNode;
 import io.github.rodyamirov.utils.SingleElementStack;
 
-import java.util.Stack;
 import java.util.function.Supplier;
 
 /**
  * Created by richard.rast on 12/25/16.
  */
 public class EvalVisitor extends NodeVisitor {
-    public static SymbolValue evaluateExpression(ExpressionNode expressionNode, SymbolTable symbolTable) {
-        EvalVisitor visitor = new EvalVisitor(symbolTable);
-        expressionNode.acceptVisit(visitor);
-        return visitor.resultStack.pop();
+    // TODO move the type checking stuff to the type checker
+    public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
+        EvalVisitor evalVisitor = new EvalVisitor(symbolTable);
+        programNode.acceptVisit(evalVisitor);
+        return evalVisitor.symbolValueTable;
     }
 
-    public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
-        EvalVisitor visitor = new EvalVisitor(symbolTable);
-        programNode.acceptVisit(visitor);
-        return visitor.symbolValueTable;
+    public static SymbolValue evaluateExpression(ExpressionNode expressionNode, SymbolTable symbolTable) {
+        EvalVisitor evalVisitor = new EvalVisitor(symbolTable);
+        expressionNode.acceptVisit(evalVisitor);
+        return evalVisitor.resultStack.pop();
     }
 
     private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
@@ -102,16 +102,11 @@ public class EvalVisitor extends NodeVisitor {
     public void visit(ForNode forNode) {
         VariableAssignNode loopVariable = forNode.assignNode.variableAssignNode;
 
-        // TODO move this check to a semantic analyzer
-        TypeSpec assignType = symbolValueTable.getType(forNode.scope, forNode.assignNode.variableAssignNode.idToken);
-        if (assignType != TypeSpec.INTEGER) {
-            throw TypeCheckException.wrongValueClass(assignType, TypeSpec.INTEGER);
-        }
-
         // set up the start
         forNode.assignNode.expressionNode.acceptVisit(this);
         int start = ((SymbolValue<Integer>) resultStack.pop()).value;
 
+        // set up the end
         forNode.bound.acceptVisit(this);
         int end = ((SymbolValue<Integer>) resultStack.pop()).value;
 

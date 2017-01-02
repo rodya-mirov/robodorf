@@ -225,7 +225,7 @@ public class ParserTest {
 
     @Test
     public void exprTest8() {
-        // it just has to parse, not evaluate reasonably
+        // it just has to parse, not evaluateProgram reasonably
         SyntaxTree tree = new BinOpNode(
                 constant(true),
                 constant(false),
