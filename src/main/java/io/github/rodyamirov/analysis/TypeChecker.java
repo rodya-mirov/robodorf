@@ -2,7 +2,6 @@ package io.github.rodyamirov.analysis;
 
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.exceptions.TypeCheckException;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
 import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
@@ -33,8 +32,6 @@ import java.util.Set;
  * Created by richard.rast on 1/2/17.
  */
 public class TypeChecker extends ThoroughVisitor {
-    // TODO - lots of tests
-
     public static List<ErrorMessage> assignTypes(SyntaxTree syntaxTree, SymbolTable symbolTable) {
         TypeChecker typeChecker = new TypeChecker(symbolTable);
         syntaxTree.acceptVisit(typeChecker);

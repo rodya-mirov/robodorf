@@ -1,6 +1,5 @@
 package io.github.rodyamirov.eval;
 
-import io.github.rodyamirov.exceptions.TypeCheckException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolTable;
@@ -28,7 +27,6 @@ import io.github.rodyamirov.tree.ProcedureDeclarationNode;
 import io.github.rodyamirov.tree.ProgramNode;
 import io.github.rodyamirov.tree.RealConstantNode;
 import io.github.rodyamirov.tree.StatementNode;
-import io.github.rodyamirov.tree.SyntaxTree;
 import io.github.rodyamirov.tree.UnaryOpNode;
 import io.github.rodyamirov.tree.VariableAssignNode;
 import io.github.rodyamirov.tree.VariableDeclarationNode;
@@ -42,7 +40,6 @@ import java.util.function.Supplier;
  * Created by richard.rast on 12/25/16.
  */
 public class EvalVisitor extends NodeVisitor {
-    // TODO move the type checking stuff to the type checker
     public static SymbolValueTable evaluateProgram(ProgramNode programNode, SymbolTable symbolTable) {
         EvalVisitor evalVisitor = new EvalVisitor(symbolTable);
         programNode.acceptVisit(evalVisitor);
