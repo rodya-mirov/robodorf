@@ -36,6 +36,14 @@ public final class LoopControlNode extends StatementNode {
     }
 
     @Override
+    public String toString() {
+        return String.format(
+                "Loop control node, type: %s, at scope %s",
+                type.name(), Objects.toString(scope)
+        );
+    }
+
+    @Override
     public int hashCode() {
         return 43 * Objects.hashCode(scope) + type.hashCode();
     }

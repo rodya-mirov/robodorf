@@ -58,9 +58,6 @@ public class EvalVisitor extends NodeVisitor {
     private final SingleElementStack<SymbolValue> resultStack = new SingleElementStack<>();
     private final SingleElementStack<LoopControlNode> loopControlNodes = new SingleElementStack<>();
 
-    // not final; allows for other contexts to have their own loop stack more easily
-    private Stack<LoopStatementNode> loopNodeStack = new Stack<>();
-
     private final SymbolValueTable symbolValueTable;
 
     private EvalVisitor(SymbolTable globalDeclarations) {
@@ -76,14 +73,12 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
-        loopNodeStack.push(whileNode);
         while (checkCondition.get()) {
             whileNode.childStatement.acceptVisit(this);
             if (endLoopShouldBreak()) {
                 break;
             }
         }
-        loopNodeStack.pop();
     }
 
     @Override
@@ -95,22 +90,16 @@ public class EvalVisitor extends NodeVisitor {
                     return result.value;
                 };
 
-        loopNodeStack.push(doUntilNode);
-
         do {
             doUntilNode.childStatement.acceptVisit(this);
             if (endLoopShouldBreak()) {
                 break;
             }
         } while (! checkCondition.get());
-
-        loopNodeStack.pop();
     }
 
     @Override
     public void visit(ForNode forNode) {
-        loopNodeStack.push(forNode);
-
         VariableAssignNode loopVariable = forNode.assignNode.variableAssignNode;
 
         // TODO move this check to a semantic analyzer
@@ -152,8 +141,6 @@ public class EvalVisitor extends NodeVisitor {
                 break;
             }
         }
-
-        loopNodeStack.pop();
     }
 
     // safely pops the top loop control directive; returns true iff it's a break
@@ -181,11 +168,6 @@ public class EvalVisitor extends NodeVisitor {
 
     @Override
     public void visit(LoopControlNode loopControlNode) {
-        if (loopNodeStack.isEmpty()) {
-            String message = String.format("Error: %s while not in loop!", loopControlNode.type.name());
-            throw new IllegalStateException(message);
-        }
-
         loopControlNodes.push(loopControlNode);
     }
 
@@ -196,10 +178,7 @@ public class EvalVisitor extends NodeVisitor {
 
         ProcedureDeclarationNode call = procValue.value;
 
-        Stack<LoopStatementNode> outsideLoopStack = loopNodeStack;
-        loopNodeStack = new Stack<>();
-
-        // then just execute everything in it
+        // just execute everything in the procedure declaration
         call.blockNode.acceptVisit(this);
 
         // then clear out instance variables! they should not persist between calls
@@ -209,9 +188,6 @@ public class EvalVisitor extends NodeVisitor {
                 symbolValueTable.clearValue(scope, idToken);
             }
         }
-
-        // restore the state of the loop stack once the procedure call is over
-        loopNodeStack = outsideLoopStack;
     }
 
     @Override
