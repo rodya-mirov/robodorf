@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.exceptions.UnexpectedTokenException;
 import io.github.rodyamirov.lex.Token;
 import io.github.rodyamirov.lex.Tokenizer;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.TypeSpec;
 import io.github.rodyamirov.tree.AndThenNode;
 import io.github.rodyamirov.tree.AssignNode;

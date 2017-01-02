@@ -339,7 +339,7 @@ public class EvalVisitorTest {
                 + "end.";
         SymbolValueTable desired = new SymbolValueTable(makeSymbolTable(prog));
         desired.setValue(progScope, Token.ID("a"), SymbolValue.make(TypeSpec.REAL, 1.25f));
-        desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4*1.25f*1.25f+4));
+        desired.setValue(progScope, Token.ID("b"), SymbolValue.make(TypeSpec.REAL, 4 * 1.25f * 1.25f + 4));
         desired.setValue(ROOT_SCOPE, progName, makeProgram(ROOT_SCOPE, prog));
 
         doProgramTest(prog, desired);
@@ -409,7 +409,8 @@ public class EvalVisitorTest {
                 + " a := 2; b:= 3.1; c := 12; d := c*c-4;"
                 //  e := a < b or c < d;  <-- doesn't work; in pascal or's precedence is way too high and does "b or c"
                 + " e := a<b or else c<d;"         // true
-                + " f := a=b and then g;"          // true; note g not being defined isn't a problem because of short circuiting
+                + " f := a=b and then g;"
+                // true; note g not being defined isn't a problem because of short circuiting
                 + " g := a > 5 or else not (b < c);"  // false
                 + " h := a >= 12 or else b <= 2 or else (c=12 and then d = c*c-4) " // true
                 + "end {the whole thing{nested} syntax error! nope} .";

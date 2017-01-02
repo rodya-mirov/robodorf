@@ -1,7 +1,5 @@
 package io.github.rodyamirov.tree;
 
-import io.github.rodyamirov.symbols.Scope;
-
 import java.util.Objects;
 import java.util.Optional;
 

@@ -92,7 +92,8 @@ public class ScopeAssignerTest {
     @Test
     public void booleanConstantNode() {
         Scope testScope = ROOT_SCOPE;
-        BooleanConstantNode booleanConstantNode = (BooleanConstantNode) Parser.parseExpression("true");
+        BooleanConstantNode booleanConstantNode =
+                (BooleanConstantNode) Parser.parseExpression("true");
         ScopeAssigner.assignScopes(testScope, booleanConstantNode);
 
         assertThat(booleanConstantNode.scope, is(testScope));
@@ -101,7 +102,8 @@ public class ScopeAssignerTest {
     @Test
     public void compoundNode() {
         Scope testScope = ROOT_SCOPE;
-        CompoundNode compoundNode = (CompoundNode) Parser.parseStatement("begin a := 1; b := 2; end");
+        CompoundNode compoundNode =
+                (CompoundNode) Parser.parseStatement("begin a := 1; b := 2; end");
         ScopeAssigner.assignScopes(testScope, compoundNode);
 
         assertThat(compoundNode.scope, is(testScope));
@@ -114,7 +116,8 @@ public class ScopeAssignerTest {
     @Test
     public void declarationNode() {
         Scope testScope = ROOT_SCOPE;
-        DeclarationNode declarationNode = Parser.parseProgram("program a; var b: integer; procedure test; begin end; begin end.").blockNode.declarationNode;
+        DeclarationNode declarationNode = Parser.parseProgram(
+                "program a; var b: integer; procedure test; begin end; begin end.").blockNode.declarationNode;
         ScopeAssigner.assignScopes(testScope, declarationNode);
 
         assertThat(declarationNode.scope, is(testScope));
@@ -164,7 +167,8 @@ public class ScopeAssignerTest {
     public void ifNode() {
         Scope testScope = Scope.makeRootScope(Token.ID("dsjnd")).makeChildScope(Token.ID("dsnd"));
 
-        IfStatementNode ifStatementNode = (IfStatementNode) Parser.parseStatement("if true then a:= 1 else a := 2");
+        IfStatementNode ifStatementNode =
+                (IfStatementNode) Parser.parseStatement("if true then a:= 1 else a := 2");
         ScopeAssigner.assignScopes(testScope, ifStatementNode);
 
         assertThat(ifStatementNode.scope, is(testScope));
@@ -247,7 +251,8 @@ public class ScopeAssignerTest {
         ScopeAssigner.assignScopes(testScope, procedureDeclarationNode);
 
         assertThat(procedureDeclarationNode.scope, is(testScope));
-        assertThat(procedureDeclarationNode.blockNode.scope, is(testScope.makeChildScope(Token.ID("proc"))));
+        assertThat(procedureDeclarationNode.blockNode.scope,
+                is(testScope.makeChildScope(Token.ID("proc"))));
     }
 
     @Test
@@ -259,8 +264,10 @@ public class ScopeAssignerTest {
 
         assertThat(programNode.scope, is(testScope));
         assertThat(programNode.blockNode.scope, is(testScope.makeChildScope(Token.ID("eh"))));
-        assertThat(programNode.blockNode.declarationNode.scope, is(testScope.makeChildScope(Token.ID("eh"))));
-        assertThat(programNode.blockNode.compoundNode.scope, is(testScope.makeChildScope(Token.ID("eh"))));
+        assertThat(programNode.blockNode.declarationNode.scope,
+                is(testScope.makeChildScope(Token.ID("eh"))));
+        assertThat(programNode.blockNode.compoundNode.scope,
+                is(testScope.makeChildScope(Token.ID("eh"))));
     }
 
     @Test
@@ -288,7 +295,8 @@ public class ScopeAssignerTest {
     public void variableAssignNode() {
         Scope testScope = Scope.makeRootScope(Token.ID("jdksnkd"));
 
-        VariableAssignNode variableAssignNode = ((AssignNode) Parser.parseStatement("a := 1")).variableAssignNode;
+        VariableAssignNode variableAssignNode =
+                ((AssignNode) Parser.parseStatement("a := 1")).variableAssignNode;
         ScopeAssigner.assignScopes(testScope, variableAssignNode);
 
         assertThat(variableAssignNode.scope, is(testScope));

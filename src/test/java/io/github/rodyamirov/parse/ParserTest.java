@@ -700,7 +700,8 @@ public class ParserTest {
             doParseProgramTest(text, programNode);
             assertThat("Shouldn't have gotten here", true, is(false));
         } catch (UnexpectedTokenException ise) {
-            assertThat(ise.getMessage(), is(String.format("Unexpected token type %s", Token.Type.ELSE.name())));
+            assertThat(ise.getMessage(),
+                    is(String.format("Unexpected token type %s", Token.Type.ELSE.name())));
         }
     }
 
@@ -857,22 +858,39 @@ public class ParserTest {
                 new BlockNode(
                         new DeclarationNode(
                                 ImmutableList.of(
-                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")), TypeSpec.INTEGER),
-                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("b"), Token.ID("c")), TypeSpec.REAL)
+                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")),
+                                                TypeSpec.INTEGER),
+                                        new VariableDeclarationNode(
+                                                ImmutableList.of(Token.ID("b"), Token.ID("c")),
+                                                TypeSpec.REAL)
                                 ),
                                 ImmutableList.of(
                                         new ProcedureDeclarationNode(procName,
                                                 new BlockNode(
                                                         new DeclarationNode(
                                                                 ImmutableList.of(
-                                                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("a")), TypeSpec.REAL),
-                                                                        new VariableDeclarationNode(ImmutableList.of(Token.ID("d")), TypeSpec.REAL)
+                                                                        new VariableDeclarationNode(
+                                                                                ImmutableList
+                                                                                        .of(Token
+                                                                                                .ID("a")),
+                                                                                TypeSpec.REAL),
+                                                                        new VariableDeclarationNode(
+                                                                                ImmutableList
+                                                                                        .of(Token
+                                                                                                .ID("d")),
+                                                                                TypeSpec.REAL)
                                                                 ),
                                                                 ImmutableList.of()
                                                         ),
                                                         new CompoundNode(ImmutableList.of(
-                                                                new AssignNode(new VariableAssignNode(Token.ID("a")), constant(1)),
-                                                                new AssignNode(new VariableAssignNode(Token.ID("d")), constant(4))
+                                                                new AssignNode(
+                                                                        new VariableAssignNode(
+                                                                                Token.ID("a")),
+                                                                        constant(1)),
+                                                                new AssignNode(
+                                                                        new VariableAssignNode(
+                                                                                Token.ID("d")),
+                                                                        constant(4))
                                                         ))
                                                 )
                                         )
@@ -953,7 +971,8 @@ public class ParserTest {
     public void procCallTest1() {
         String proc1Text = "procedure proc1; var a: Real; begin a := 12; b := 3; end;";
         String proc2Text = "procedure proc2; var b: Integer; begin a:= 1; b := 3; end;";
-        String proc3Text = "procedure proc3; var b: Integer; c: Boolean; begin c := True; if c then a := 3 else b := 3 end;";
+        String proc3Text =
+                "procedure proc3; var b: Integer; c: Boolean; begin c := True; if c then a := 3 else b := 3 end;";
         String progText = String.format(
                 "program test1; var a, b: Integer; %s %s %s begin proc1(); proc1(); proc2(); proc3() end.",
                 proc1Text, proc2Text, proc3Text
@@ -976,7 +995,8 @@ public class ParserTest {
                 progName,
                 new BlockNode(
                         new DeclarationNode(
-                                list(new VariableDeclarationNode(list(Token.ID("a"), Token.ID("b")), TypeSpec.INTEGER)),
+                                list(new VariableDeclarationNode(list(Token.ID("a"), Token.ID("b")),
+                                        TypeSpec.INTEGER)),
                                 list(proc1Node, proc2Node, proc3Node)
                         ),
                         new CompoundNode(
@@ -990,7 +1010,7 @@ public class ParserTest {
                 )
         );
 
-        doParseProgramTest(new String[] { progText }, desired);
+        doParseProgramTest(new String[] {progText}, desired);
     }
 
     @Test
@@ -1000,7 +1020,7 @@ public class ParserTest {
                 Parser.parseExpression("1<2"),
                 Parser.parseStatement("a := 1")
         );
-        doParseStatementTest(new String[] { whileText }, desired);
+        doParseStatementTest(new String[] {whileText}, desired);
     }
 
     @Test
@@ -1013,7 +1033,7 @@ public class ParserTest {
                         Parser.parseStatement("begin a:= 2; int:=3.2 end")
                 )
         );
-        doParseStatementTest(new String[] { whileText }, desired);
+        doParseStatementTest(new String[] {whileText}, desired);
     }
 
     @Test
@@ -1023,7 +1043,7 @@ public class ParserTest {
                 Parser.parseExpression("1<2"),
                 Parser.parseStatement("a:=1")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
@@ -1046,7 +1066,7 @@ public class ParserTest {
                         Parser.parseStatement("while 1 < 2 do b := -12")
                 )
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
@@ -1062,7 +1082,7 @@ public class ParserTest {
                         )
                 )
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
@@ -1073,7 +1093,7 @@ public class ParserTest {
                 Parser.parseExpression("12-6*b"),
                 Parser.parseStatement("begin end")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 
     @Test
@@ -1084,6 +1104,6 @@ public class ParserTest {
                 Parser.parseExpression("12-6*b"),
                 Parser.parseStatement("begin end")
         );
-        doParseStatementTest(new String[] { loopText }, desired);
+        doParseStatementTest(new String[] {loopText}, desired);
     }
 }

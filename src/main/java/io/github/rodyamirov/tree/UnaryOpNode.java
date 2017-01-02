@@ -3,7 +3,6 @@ package io.github.rodyamirov.tree;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.SymbolValueOps;
 

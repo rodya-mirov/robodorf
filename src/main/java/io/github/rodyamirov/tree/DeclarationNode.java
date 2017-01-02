@@ -1,7 +1,6 @@
 package io.github.rodyamirov.tree;
 
 import com.google.common.collect.ImmutableList;
-import io.github.rodyamirov.symbols.Scope;
 
 import java.util.List;
 import java.util.Objects;

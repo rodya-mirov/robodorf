@@ -1,7 +1,6 @@
 package io.github.rodyamirov.tree;
 
 import io.github.rodyamirov.lex.Token;
-import io.github.rodyamirov.symbols.Scope;
 import io.github.rodyamirov.symbols.SymbolValue;
 import io.github.rodyamirov.symbols.TypeSpec;
 
